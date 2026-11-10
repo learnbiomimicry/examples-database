@@ -1,0 +1,84 @@
+---
+// Ported from Explora's ExampleCard: dual-image banner, category ribbon,
+// lift and glow on hover, and details that slide open on hover.
+const { e } = Astro.props;
+const search = [e.title, e.organism, e.company, e.summary, e.location].filter(Boolean).join(" ").toLowerCase();
+const fn = e.breakdown_function ? (e.breakdown_function.length > 140 ? e.breakdown_function.slice(0, 137).trimEnd() + "..." : e.breakdown_function) : null;
+---
+<article
+  class="ex-card"
+  data-industry={e.industry?.slug || ""}
+  data-interest={e.interest?.slug || ""}
+  data-country={e.country?.slug || ""}
+  data-levels={e.levels.map((l) => l.toLowerCase()).join(" ")}
+  data-search={search}
+  data-type={e.content_type || ""}
+>
+  <a class="ex-card-link" href={`/${e.slug}/`}>
+    <div class="ex-banner">
+      {e.image && e.image2 ? (
+        <div class="ex-banner-dual">
+          <div><img src={e.image} alt={`Biological inspiration for ${e.title}`} loading="lazy" decoding="async" /></div>
+          <div><img src={e.image2} alt={`Human application for ${e.title}`} loading="lazy" decoding="async" /></div>
+        </div>
+      ) : e.image || e.image2 ? (
+        <div class="ex-banner-single"><img src={e.image || e.image2} alt={e.title} loading="lazy" decoding="async" /></div>
+      ) : (
+        <div class="ex-banner-single ex-banner-empty" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>
+        </div>
+      )}
+      {e.interest && <span class="ex-ribbon">{e.interest.name}</span>}
+    </div>
+    <div class="ex-head">
+      {e.organism && <p class="ex-organism">{e.organism}</p>}
+      <h3 class="ex-title">{e.title}</h3>
+    </div>
+    <div class="ex-more">
+      <div class="ex-more-inner">
+        <div class="ex-rule"></div>
+        {e.summary && <p class="ex-summary">{e.summary}</p>}
+        <ul class="ex-facts">
+          {e.organism && <li><span class="ico">&#10047;</span><span><b>Inspired by:</b> {e.organism}</span></li>}
+          {fn && <li><span class="ico">&#9889;&#xFE0E;</span><span><b>Function:</b> {fn}</span></li>}
+          {e.company && <li><span class="ico">&#9635;</span><span><b>Company:</b> {e.company}</span></li>}
+          {e.location && <li><span class="ico">&#9673;</span><span><b>Where:</b> {e.location}</span></li>}
+        </ul>
+        <span class="ex-cta">See full biomimicry example <span aria-hidden="true">&rarr;</span></span>
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .ex-card { position: relative; display: flex; flex-direction: column; overflow: hidden; border-radius: 16px; border: 1px solid var(--border); background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: transform .7s var(--ease), box-shadow .7s var(--ease); }
+  .ex-card:hover { transform: translateY(-8px); box-shadow: 0 24px 64px -12px rgba(10,69,100,0.22), 0 12px 32px -8px rgba(35,31,32,0.18); }
+  .ex-card.is-new { animation: fadeUp .8s var(--ease) both; }
+  .ex-card-link { display: flex; flex-direction: column; flex: 1; text-decoration: none; color: inherit; }
+  .ex-banner { position: relative; overflow: hidden; background: rgba(10,69,100,0.06); }
+  .ex-banner-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; aspect-ratio: 2 / 1; }
+  .ex-banner-dual > div { overflow: hidden; height: 100%; }
+  .ex-banner-single { aspect-ratio: 16 / 9; }
+  .ex-banner img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease-out; color: transparent; font-size: 0; }
+  .ex-card:hover .ex-banner img { transform: scale(1.04); }
+  .ex-banner-empty { display: grid; place-items: center; color: rgba(10,69,100,0.18); }
+  .ex-ribbon { position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 12px; background: rgba(35,31,32,0.7); backdrop-filter: blur(4px); color: rgba(255,255,255,0.88); font-size: 10px; letter-spacing: 0.04em; }
+  .ex-head { padding: 16px 16px 12px; }
+  .ex-organism { font-family: var(--font-sub); font-style: italic; font-size: 12px; color: var(--primary); margin-bottom: 4px; }
+  .ex-title { font-family: var(--font-head); font-weight: 700; font-size: 16px; line-height: 1.35; color: var(--foreground); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color .3s; }
+  .ex-card:hover .ex-title { color: var(--primary); }
+  .ex-more { overflow: hidden; max-height: 0; opacity: 0; transition: max-height .5s ease-in-out, opacity .5s ease-in-out; }
+  .ex-card:hover .ex-more, .ex-card:focus-within .ex-more { max-height: 24rem; opacity: 1; }
+  .ex-more-inner { padding: 0 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .ex-rule { height: 1px; background: var(--border); }
+  .ex-summary, .ex-facts, .ex-cta { transform: translateY(8px); opacity: 0; transition: transform .5s ease-out, opacity .5s ease-out; }
+  .ex-card:hover .ex-summary, .ex-card:hover .ex-facts, .ex-card:hover .ex-cta,
+  .ex-card:focus-within .ex-summary, .ex-card:focus-within .ex-facts, .ex-card:focus-within .ex-cta { transform: none; opacity: 1; }
+  .ex-summary { transition-delay: 75ms; font-size: 12px; color: var(--muted-foreground); line-height: 1.65; }
+  .ex-facts { transition-delay: 100ms; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: rgba(35,31,32,0.78); }
+  .ex-facts li { display: flex; gap: 8px; align-items: flex-start; }
+  .ex-facts b { font-weight: 500; color: rgba(35,31,32,0.6); }
+  .ico { color: var(--primary); width: 14px; flex: none; font-size: 12px; line-height: 1.6; text-align: center; }
+  .ex-cta { transition-delay: 150ms; display: flex; justify-content: center; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid rgba(52,152,219,0.45); border-radius: 10px; color: var(--primary); font-size: 12px; font-weight: 400; }
+  @media (hover: none) { .ex-more { max-height: none; opacity: 1; } .ex-summary, .ex-facts, .ex-cta { opacity: 1; transform: none; } .ex-facts { display: none; } }
+</style>

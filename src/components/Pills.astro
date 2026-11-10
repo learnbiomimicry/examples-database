@@ -1,0 +1,34 @@
+---
+// Category pills plus the "Filter & Search" toggle, as on Explora.
+// Rendered twice on the home page: in the hero and in the sticky bar.
+export const PILLS = [
+  { label: "All Examples", key: "" },
+  { label: "Architecture", key: "interest:architecture" },
+  { label: "Engineering", key: "interest:engineering" },
+  { label: "Product Design", key: "interest:product-design" },
+  { label: "Materials", key: "interest:materials" },
+  { label: "Bionics", key: "interest:robotics" },
+  { label: "Patterns", key: "type:morphological_pattern" },
+];
+const { compact = false } = Astro.props;
+---
+<div class:list={["pills-row", { compact }]}>
+  {PILLS.map((p, i) => (
+    <button type="button" class:list={["pill", { "pill-sm": compact, "is-active": i === 0 }]} data-pill={p.key}>{p.label}</button>
+  ))}
+  <button type="button" class:list={["pill filter-toggle", { "pill-sm": compact }]} data-filter-toggle aria-expanded="false">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    {compact ? "Search" : "Filter & Search"}
+    <span class="ft-dot" hidden></span>
+    <svg class="ft-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+</div>
+
+<style>
+  .pills-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+  .pills-row.compact { gap: 6px; margin: 0; }
+  .filter-toggle.is-open, .filter-toggle.has-filters { background: rgba(52,152,219,0.1); color: var(--primary); border-color: rgba(52,152,219,0.5); }
+  .ft-chev { transition: transform .3s; }
+  .filter-toggle.is-open .ft-chev { transform: rotate(180deg); }
+  .ft-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--action); }
+</style>

@@ -1,0 +1,410 @@
+---
+// Case study page, ported from Explora's CaseStudyTemplate: breadcrumb, hero images,
+// title block, dark "At a Glance" sidebar with an animated rating, stats, the story,
+// the biomimicry breakdown table, design prompts and related examples.
+import Base from "../layouts/Base.astro";
+import Card from "../components/Card.astro";
+import { getExamples, facetUrl, paragraphs, slugify } from "../lib/data.js";
+import { SITE, CTA } from "../lib/config.js";
+
+export async function getStaticPaths() {
+  const examples = await getExamples();
+  return examples.map((e) => ({ params: { slug: e.slug }, props: { e } }));
+}
+
+const { e } = Astro.props;
+const all = await getExamples();
+const related = all
+  .filter((x) => x.slug !== e.slug)
+  .map((x) => ({ x, s: (x.interest?.slug && x.interest.slug === e.interest?.slug ? 3 : 0) + (x.industry?.slug && x.industry.slug === e.industry?.slug ? 2 : 0) + x.levels.filter((l) => e.levels.includes(l)).length }))
+  .filter((r) => r.s > 0)
+  .sort((a, b) => b.s - a.s || (b.x.rating?.score ?? 0) - (a.x.rating?.score ?? 0))
+  .slice(0, 3)
+  .map((r) => r.x);
+
+const back = e.interest ? { label: e.interest.name, href: facetUrl("interest", e.interest.slug) } : { label: "All Examples", href: "/" };
+const heroImages = [e.image && { src: e.image, alt: e.organism ? `${e.organism}, the natural model for ${e.title}` : e.title }, e.image2 && { src: e.image2, alt: `${e.title}: the human application` }].filter(Boolean);
+
+const tags = [
+  ...(e.interest ? [{ label: e.interest.name, href: facetUrl("interest", e.interest.slug) }] : []),
+  ...(e.industry && e.industry.slug !== e.interest?.slug ? [{ label: e.industry.name, href: facetUrl("industry", e.industry.slug) }] : []),
+  ...e.levels.map((l) => ({ label: l, href: facetUrl("level", slugify(l)) })),
+];
+
+const glance = [
+  e.company && { label: "Company", value: e.company, serif: true },
+  e.organism && { label: "Inspired by", value: e.organism, serif: true, accent: true },
+  e.natural_model && { label: "Natural model", value: e.natural_model, serif: true },
+  e.adaptation_emulated && { label: "Adaptation emulated", value: e.adaptation_emulated },
+  e.products && { label: "Products", value: e.products },
+  e.industry && { label: "Industry", value: e.industry.name },
+  e.location && { label: "Where", value: e.location },
+].filter(Boolean);
+
+const breakdown = [
+  ["Function", e.breakdown_function],
+  ["Mechanism", e.breakdown_mechanism],
+  ["Design Principle", e.breakdown_principle],
+  ["Resulting Design", e.breakdown_result],
+].filter((r) => r[1]);
+
+const story = paragraphs(e.full_description);
+const description = (e.summary || e.problem_statement || `Biomimicry example: ${e.title}`).slice(0, 300);
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: e.title,
+  description,
+  url: `${SITE.url}/${e.slug}/`,
+  ...(e.image ? { image: [e.image, e.image2].filter(Boolean) } : {}),
+  ...(e.updated_at ? { dateModified: e.updated_at } : {}),
+  ...(e.organism ? { about: e.organism } : {}),
+  publisher: { "@type": "Organization", name: SITE.brand, url: SITE.home },
+};
+const promptHref = (p) => `https://explora.network/explora?prompt=${encodeURIComponent(p)}&source=examples-database`;
+---
+<Base title={`${e.title}${e.organism ? `, inspired by ${e.organism}` : ""}`} description={description} image={e.image} jsonLd={jsonLd}>
+  <main class="cs">
+    <div class="container cs-wrap">
+      <a class="crumb" href={back.href}><span aria-hidden="true">&larr;</span> {back.label}</a>
+
+      {heroImages.length > 0 && (
+        <div class:list={["hero-imgs", { two: heroImages.length > 1 }]}>
+          {heroImages.map((img) => <div class="hero-img"><img src={img.src} alt={img.alt} /></div>)}
+        </div>
+      )}
+
+      <div class="title-block">
+        {tags.length > 0 && (
+          <div class="tags">{tags.map((t, i) => <a class:list={["tag", { first: i === 0 }]} href={t.href}>{t.label}</a>)}</div>
+        )}
+        {e.organism && <p class="inspired">Inspired by: <em>{e.organism}</em></p>}
+        <h1>{e.title}</h1>
+        {e.company && <p class="company">{e.company}</p>}
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="cols">
+        <div class="main">
+          {e.metrics.length > 0 && (
+            <div class="stats">
+              {e.metrics.slice(0, 3).map((m) => (
+                <div class="stat"><p class="stat-n">{m.value}</p><p class="stat-l">{m.label}</p>{m.subtext && <p class="stat-s">{m.subtext}</p>}</div>
+              ))}
+            </div>
+          )}
+
+          <section class="story">
+            {e.problem_statement && (
+              <div class="problem">
+                <p class="mono-label">The Problem</p>
+                <p class="problem-text">{e.problem_statement}</p>
+              </div>
+            )}
+            {e.summary && <p class="summary">{e.summary}</p>}
+            {story.length > 0 && (
+              <>
+                <div class="story-full" data-story>
+                  {story.map((p) => <p>{p}</p>)}
+                </div>
+                <button type="button" class="read-more" data-read-more>Read the full story <span aria-hidden="true">&#8964;</span></button>
+              </>
+            )}
+          </section>
+
+          {breakdown.length > 0 && (
+            <>
+              <div class="divider tall"></div>
+              <section class="breakdown reveal">
+                <p class="mono-label">Biomimicry Breakdown</p>
+                <h2>The Biomimicry Analysis</h2>
+                {e.organism && <p class="section-sub">How {e.organism} translates into {e.title}</p>}
+                <div class="table">
+                  <div class="tr th"><div>Term</div><div>Applied to {e.title}</div></div>
+                  {breakdown.map(([term, def], i) => (
+                    <div class:list={["tr", { odd: i % 2 === 1 }]}><div class="term">{term}</div><div class="def">{def}</div></div>
+                  ))}
+                </div>
+                <a class="explora-cta" href={CTA.opportunityMap.href}>
+                  <div class="ec-head">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 21c5.5 0 10-4 10-9s-4.5-9-10-9S2 7 2 12c0 1.8.6 3.5 1.6 5L2 21l4.4-1.4A10.7 10.7 0 0 0 12 21z"/></svg>
+                    <p>Find your own nature-inspired opportunities</p>
+                  </div>
+                  <p class="ec-text">Inspired by {e.title}? The Biomimicry Opportunity Map scans your company website and suggests challenges worth solving the way nature would.</p>
+                  <span class="ec-go">Get started &rarr;</span>
+                </a>
+              </section>
+            </>
+          )}
+
+          {e.prompts.length > 0 && (
+            <>
+              <div class="divider tall"></div>
+              <section class="prompts reveal">
+                <p class="mono-label">Apply This</p>
+                <h2>Design Application Prompts</h2>
+                <div class="prompt-grid">
+                  {e.prompts.map((p, i) => (
+                    <a class="prompt" href={promptHref(p)}>
+                      <span class="prompt-n">{i + 1}</span>
+                      <span class="prompt-body"><span class="prompt-text">{p}</span><span class="prompt-go">Explore with Explora &rarr;</span></span>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
+        </div>
+
+        <aside class="side">
+          <div class="side-inner">
+            <div class="side-block">
+              <p class="side-label">At a Glance</p>
+              <div class="glance">
+                {glance.map((g) => (
+                  <div>
+                    <p class="g-label">{g.label}</p>
+                    <p class:list={["g-value", { serif: g.serif, accent: g.accent }]}>{g.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {e.rating && (
+              <div class="side-block rating" data-rating={e.rating.score}>
+                <button type="button" class="rating-btn" data-rating-toggle aria-expanded="false">
+                  <span class="rating-row">
+                    <span class="side-label">Biomimicry Rating</span>
+                    <span class="rating-score"><span data-rating-num>0.0</span><span class="of">/ 10</span>
+                      <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+                  </span>
+                  <span class="bar"><span class="bar-fill" data-rating-bar></span></span>
+                </button>
+                <div class="criteria" data-criteria>
+                  {e.rating.criteria.map(([label, v], i) => (
+                    <div class="crit"><p class="g-label">{label}</p><span class="bar thin"><span class="bar-fill" data-crit={v} style={`--d:${i * 80}ms`}></span></span></div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div class="side-block">
+              <button type="button" class="save" data-save={e.slug} aria-pressed="false">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                <span data-save-label>Save this case study</span>
+              </button>
+            </div>
+
+            <div class="side-block last">
+              <p class="side-title">Ready to apply this?</p>
+              <p class="side-text">Learn to use biomimicry with the free Field Guide and our short courses.</p>
+              <a class="side-btn" href={CTA.fieldGuide.href}>Get the free Field Guide</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    {related.length > 0 && (
+      <section class="related">
+        <div class="container cs-wrap">
+          <div class="rel-head"><h2>More {e.interest?.name ?? ""} Examples</h2><div class="rule"></div></div>
+          <div class="grid-3">{related.map((x) => <Card e={x} />)}</div>
+        </div>
+      </section>
+    )}
+
+    <section class="cs-close">
+      <div class="container cs-wrap close-grid">
+        <div>
+          <p class="mono-label light">There's a natural world to explore</p>
+          <h2>Learn to find strategies like this yourself</h2>
+        </div>
+        <div class="close-actions">
+          <a class="close-btn" href={CTA.fieldGuide.href}>Get the free Field Guide</a>
+          <a class="close-link" href="/">Browse all biomimicry examples &rarr;</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<script>
+  // Read the full story
+  const btn = document.querySelector("[data-read-more]");
+  const storyEl = document.querySelector("[data-story]");
+  btn?.addEventListener("click", () => { storyEl.classList.add("is-open"); btn.hidden = true; });
+
+  // Animated rating (counts up when scrolled into view), expandable criteria
+  const rating = document.querySelector("[data-rating]");
+  if (rating) {
+    const score = Number(rating.dataset.rating);
+    const num = rating.querySelector("[data-rating-num]");
+    const bar = rating.querySelector("[data-rating-bar]");
+    const ease = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+    const io = new IntersectionObserver(([en]) => {
+      if (!en.isIntersecting) return;
+      io.disconnect();
+      const t0 = performance.now();
+      const step = (now) => {
+        const t = Math.min((now - t0) / 1400, 1);
+        const v = ease(t) * score;
+        num.textContent = v.toFixed(1);
+        bar.style.width = `${(v / 10) * 100}%`;
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, { threshold: 0.3 });
+    io.observe(rating);
+    const toggle = rating.querySelector("[data-rating-toggle]");
+    toggle.addEventListener("click", () => {
+      const open = rating.classList.toggle("is-open");
+      toggle.setAttribute("aria-expanded", String(open));
+      rating.querySelectorAll("[data-crit]").forEach((el) => (el.style.width = open ? `${(Number(el.dataset.crit) / 6) * 100}%` : "0%"));
+    });
+  }
+
+  // Save (kept in this browser only)
+  const save = document.querySelector("[data-save]");
+  if (save) {
+    const KEY = "lb_saved_examples";
+    const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
+    const paint = () => { const on = read().includes(save.dataset.save); save.classList.toggle("is-on", on); save.setAttribute("aria-pressed", String(on)); save.querySelector("[data-save-label]").textContent = on ? "Saved" : "Save this case study"; };
+    save.addEventListener("click", () => {
+      const list = read(); const i = list.indexOf(save.dataset.save);
+      i >= 0 ? list.splice(i, 1) : list.push(save.dataset.save);
+      try { localStorage.setItem(KEY, JSON.stringify(list)); } catch {}
+      paint();
+    });
+    paint();
+  }
+</script>
+
+<style>
+  .cs-wrap { max-width: 1152px; }
+  .cs { padding-top: 24px; }
+  .crumb { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); text-decoration: none; margin-bottom: 24px; transition: color .2s; }
+  .crumb:hover { color: var(--foreground); }
+  .hero-imgs { margin-bottom: 32px; }
+  .hero-imgs.two { display: flex; gap: 12px; }
+  .hero-img { flex: 1; border-radius: 12px; overflow: hidden; background: var(--surface); transition: transform .35s cubic-bezier(0.34,1.56,0.64,1), box-shadow .35s ease; }
+  .hero-imgs.two .hero-img { aspect-ratio: 1 / 1; }
+  .hero-imgs:not(.two) .hero-img { max-height: 520px; }
+  .hero-img:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 16px 40px rgba(10,69,100,0.18); }
+  .hero-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; color: transparent; }
+  .hero-img:hover img { transform: scale(1.04); }
+  .title-block { margin-top: 32px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; padding: 4px 12px; border: 1px solid var(--border); border-radius: 20px; color: var(--muted-foreground); text-decoration: none; transition: border-color .2s, color .2s; }
+  .tag.first { border-color: rgba(10,69,100,0.3); color: var(--primary); }
+  .tag:hover { border-color: var(--action); color: var(--primary); }
+  .inspired { font-family: var(--font-sub); font-style: italic; color: var(--primary); font-size: 16px; margin-bottom: 4px; }
+  .inspired em { font-style: italic; }
+  .title-block h1 { font-family: var(--font-serif); font-weight: 500; font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.15; margin-bottom: 8px; }
+  .company { font-size: 18px; color: var(--muted-foreground); }
+  .divider { border-top: 1px solid var(--border); margin: 24px 0 32px; }
+  .divider.tall { margin: 0 0 56px; }
+  .cols { display: flex; flex-direction: row-reverse; gap: 64px; align-items: flex-start; }
+  .main { flex: 1; min-width: 0; }
+  .side { width: 256px; flex: none; position: sticky; top: 96px; }
+  @media (max-width: 1024px) { .cols { flex-direction: column; gap: 40px; } .side { width: 100%; position: static; } }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 40px; }
+  .stat { background: var(--card); padding: 20px 24px; text-align: center; }
+  .stat-n { font-family: var(--font-head); font-weight: 900; font-size: 36px; color: var(--foreground); margin-bottom: 4px; line-height: 1.1; }
+  .stat-l { font-size: 12px; font-weight: 500; }
+  .stat-s { font-family: var(--font-mono); font-size: 11px; color: rgba(94,106,114,0.7); }
+  @media (max-width: 640px) { .stats { grid-template-columns: 1fr; } }
+
+  .story { margin-bottom: 48px; font-size: 15.5px; line-height: 1.9; color: rgba(35,31,32,0.82); }
+  .problem { margin-bottom: 32px; padding: 20px; border-left: 2px solid rgba(10,69,100,0.4); background: rgba(10,69,100,0.04); }
+  .mono-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(94,106,114,0.75); margin-bottom: 10px; }
+  .problem-text { font-family: var(--font-serif); font-style: italic; font-size: 16px; color: rgba(35,31,32,0.82); line-height: 1.7; }
+  .summary { font-size: 17px; color: var(--muted-foreground); line-height: 1.8; margin-bottom: 24px; }
+  .story-full { display: none; }
+  .story-full.is-open { display: block; animation: fadeUp .6s var(--ease) both; }
+  .story-full p + p { margin-top: 20px; }
+  .read-more { border: 0; background: none; padding: 0; color: rgba(35,31,32,0.7); text-decoration: underline; text-underline-offset: 4px; font-size: 14px; }
+  .read-more:hover { color: var(--foreground); }
+
+  .breakdown, .prompts { margin-bottom: 56px; }
+  .breakdown h2, .prompts h2 { font-family: var(--font-serif); font-weight: 500; font-size: 24px; margin-bottom: 8px; }
+  .section-sub { font-size: 14px; color: var(--muted-foreground); margin-bottom: 24px; }
+  .prompts h2 { margin-bottom: 24px; }
+  .table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .tr { display: grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid var(--border); }
+  .tr:last-child { border-bottom: 0; }
+  .tr > div { padding: 16px 20px; }
+  .tr > div:first-child { border-right: 1px solid var(--border); }
+  .th { background: rgba(238,243,246,0.6); }
+  .th > div { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-foreground); padding-top: 12px; padding-bottom: 12px; }
+  .term { font-weight: 600; font-size: 14px; background: rgba(238,243,246,0.35); }
+  .tr.odd .term { background: rgba(238,243,246,0.15); }
+  .def { font-size: 14px; color: rgba(35,31,32,0.8); line-height: 1.7; }
+  .tr:not(.odd):not(.th) .def { background: rgba(238,243,246,0.08); }
+  @media (max-width: 640px) { .tr { grid-template-columns: 90px 1fr; } .tr > div { padding: 12px; } }
+  .explora-cta { display: block; margin-top: 32px; padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: rgba(168,218,220,0.45); text-decoration: none; color: inherit; transition: box-shadow .2s; }
+  .explora-cta:hover { box-shadow: 0 6px 20px rgba(10,69,100,0.12); }
+  .ec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; color: rgba(35,31,32,0.7); }
+  .ec-head svg { transition: transform .3s; }
+  .explora-cta:hover .ec-head svg { transform: scale(1.1); }
+  .ec-head p { font-family: var(--font-head); font-weight: 700; color: var(--foreground); }
+  .explora-cta:hover .ec-head p { color: var(--primary); }
+  .ec-text { font-size: 14px; color: var(--muted-foreground); }
+  .ec-go { display: inline-flex; margin-top: 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--primary); transition: letter-spacing .2s; }
+
+  .prompt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 640px) { .prompt-grid { grid-template-columns: 1fr; } }
+  .prompt { display: flex; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); text-decoration: none; color: inherit; transition: box-shadow .2s, border-color .2s; }
+  .prompt:hover { box-shadow: 0 6px 20px rgba(10,69,100,0.10); border-color: rgba(52,152,219,0.45); }
+  .prompt-n { font-family: var(--font-head); font-weight: 900; font-size: 18px; line-height: 1; color: var(--primary); margin-top: 2px; }
+  .prompt-body { display: flex; flex-direction: column; }
+  .prompt-text { font-size: 14px; color: rgba(35,31,32,0.8); line-height: 1.65; }
+  .prompt-go { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: rgba(10,69,100,0.6); margin-top: 8px; transition: color .2s; }
+  .prompt:hover .prompt-go { color: var(--primary); }
+
+  .side-inner { border-radius: 14px; background: var(--sidebar); color: #fff; overflow: hidden; }
+  .side-block { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+  .side-block.last { border-bottom: 0; }
+  .side-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.55); display: block; margin-bottom: 16px; }
+  .glance { display: flex; flex-direction: column; gap: 16px; }
+  .g-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 4px; }
+  .g-value { font-size: 13px; font-weight: 300; line-height: 1.45; color: rgba(255,255,255,0.78); }
+  .g-value.serif { font-family: var(--font-serif); font-style: italic; font-size: 14px; color: #fff; }
+  .g-value.accent { color: var(--lb-aqua); }
+  .rating-btn { width: 100%; border: 0; background: none; padding: 0; text-align: left; color: inherit; }
+  .rating-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .rating-row .side-label { margin: 0; }
+  .rating-score { display: inline-flex; align-items: baseline; gap: 4px; font-family: var(--font-serif); font-size: 17px; }
+  .of { font-family: var(--font-mono); font-size: 9px; color: rgba(255,255,255,0.4); }
+  .chev { color: rgba(255,255,255,0.45); transition: transform .3s; align-self: center; }
+  .rating.is-open .chev { transform: rotate(180deg); }
+  .bar { display: block; height: 3px; border-radius: 999px; background: rgba(255,255,255,0.12); overflow: hidden; }
+  .bar.thin { height: 2px; }
+  .bar-fill { display: block; height: 100%; width: 0; border-radius: 999px; background: rgba(255,255,255,0.7); }
+  .crit .bar-fill { background: rgba(168,218,220,0.75); transition: width 1s var(--ease); transition-delay: var(--d); }
+  .criteria { max-height: 0; opacity: 0; overflow: hidden; transition: max-height .5s ease-in-out, opacity .5s; }
+  .rating.is-open .criteria { max-height: 300px; opacity: 1; }
+  .crit { padding-top: 12px; }
+  .save { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; padding: 0; color: rgba(255,255,255,0.65); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .save.is-on { color: var(--lb-coral); }
+  .save.is-on svg { fill: var(--lb-coral); }
+  .side-title { font-family: var(--font-head); font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .side-text { font-size: 12px; color: rgba(255,255,255,0.65); margin-bottom: 16px; line-height: 1.6; }
+  .side-btn { display: block; text-align: center; padding: 10px; border: 1px solid var(--lb-aqua); border-radius: 8px; color: var(--lb-aqua); text-decoration: none; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; transition: background .2s; }
+  .side-btn:hover { background: rgba(255,255,255,0.07); }
+
+  .related { background: var(--surface); border-top: 1px solid var(--border); padding: 56px 0; margin-top: 24px; }
+  .rel-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 32px; }
+  .rel-head h2 { font-family: var(--font-serif); font-weight: 500; font-size: 24px; white-space: nowrap; }
+  .rel-head .rule { flex: 1; }
+  .cs-close { background: var(--lb-deep); color: #fff; padding: 64px 0; }
+  .close-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: center; }
+  .mono-label.light { color: var(--lb-aqua); }
+  .cs-close h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); color: #fff; }
+  .close-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .close-btn { background: var(--action); color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: 500; }
+  .close-link { color: var(--lb-aqua); text-decoration: none; font-size: 14px; }
+  @media (max-width: 800px) { .close-grid { grid-template-columns: 1fr; } }
+</style>

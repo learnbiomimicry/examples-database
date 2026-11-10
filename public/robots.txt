@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://examples.learnbiomimicry.com/sitemap-index.xml

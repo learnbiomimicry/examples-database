@@ -1,0 +1,107 @@
+---
+// Landing pages such as /industry/materials/ or /level/form/, styled like Explora's category pages.
+import Base from "../../layouts/Base.astro";
+import Card from "../../components/Card.astro";
+import { getExamples, facetValues, facetUrl, FACETS } from "../../lib/data.js";
+import { SITE, CTA } from "../../lib/config.js";
+
+export async function getStaticPaths() {
+  const examples = await getExamples();
+  return Object.keys(FACETS).flatMap((key) =>
+    facetValues(examples, key).map((v) => ({ params: { facet: FACETS[key].path, value: v.slug }, props: { key, v } }))
+  );
+}
+
+const { key, v } = Astro.props;
+const examples = await getExamples();
+
+const LEVEL = {
+  form: { tag: "LEVEL 01", text: "Form is the most direct kind of biomimicry: emulating a shape, pattern or structure, such as the bumps on a whale's fin or the hooks that became Velcro.", color: "var(--level-form)" },
+  process: { tag: "LEVEL 02", text: "Process biomimicry emulates how nature makes or does something, such as building materials at room temperature or cleaning water without harsh chemicals.", color: "var(--level-process)" },
+  system: { tag: "LEVEL 03", text: "System biomimicry learns from how whole ecosystems work, such as closed loops where every waste becomes another organism's food.", color: "var(--level-system)" },
+};
+
+const heading = {
+  industry: [`Biomimicry examples in`, v.name],
+  interest: [`Biomimicry examples:`, v.name],
+  country: [`Biomimicry examples from`, v.name],
+  level: [`${v.name}-based`, "Biomimicry Examples"],
+}[key];
+const lead = {
+  industry: `${v.count} nature-inspired innovations in ${v.name.toLowerCase()}, each traced from the organism to the design principle behind it.`,
+  interest: `${v.count} examples where people turned a strategy from nature into ${v.name.toLowerCase()} solutions.`,
+  country: `${v.count} biomimicry innovations developed in ${v.name}, from products and materials to buildings and systems.`,
+  level: `${v.count} examples. ${LEVEL[v.slug]?.text ?? ""}`,
+}[key];
+const title = key === "level" ? `${v.name} biomimicry examples` : `${heading[0]} ${v.name}`.replace(":", "");
+const description = lead.slice(0, 300);
+const siblings = facetValues(examples, key).filter((x) => x.slug !== v.slug).slice(0, 24);
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: title,
+  description,
+  url: `${SITE.url}${facetUrl(key, v.slug)}`,
+  hasPart: v.items.slice(0, 50).map((e) => ({ "@type": "Article", headline: e.title, url: `${SITE.url}/${e.slug}/` })),
+};
+const items = [...v.items].sort((a, b) => (b.rating?.score ?? -1) - (a.rating?.score ?? -1));
+---
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <section class="f-hero">
+      <div class="f-glow" aria-hidden="true"></div>
+      <div class="container f-inner">
+        <a class="crumb" href="/"><span aria-hidden="true">&larr;</span> All Examples</a>
+        <p class="overline fade-up">{key === "level" ? LEVEL[v.slug]?.tag : FACETS[key].noun} &middot; {v.count} examples</p>
+        <h1 class="fade-up-1">{heading[0]}<br /><em>{heading[1]}</em></h1>
+        <p class="f-lead fade-up-2">{lead}</p>
+      </div>
+    </section>
+    <section class="container f-body">
+      <div class="grid-3">{items.map((e) => <Card e={e} />)}</div>
+      {siblings.length > 0 && (
+        <div class="f-more reveal">
+          <p class="overline">More by {FACETS[key].noun.toLowerCase()}</p>
+          <div class="f-pills">{siblings.map((x) => <a class="pill pill-sm" href={facetUrl(key, x.slug)}>{x.name} <span class="muted">({x.count})</span></a>)}</div>
+        </div>
+      )}
+    </section>
+    <section class="f-close">
+      <div class="container f-close-grid">
+        <div>
+          <p class="overline f-close-over">For R&amp;D and product teams</p>
+          <h2>Find the problems worth solving in your own products</h2>
+        </div>
+        <div class="f-close-actions">
+          <a class="f-btn" href={CTA.opportunityMap.href}>Map my opportunities</a>
+          <a class="f-link" href={CTA.fieldGuide.href}>Or start with the free Field Guide &rarr;</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .f-hero { position: relative; padding: 32px 0 48px; overflow: hidden; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .f-glow { position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 100%, rgba(135,186,217,0.35), transparent 60%); pointer-events: none; }
+  .f-inner { position: relative; }
+  .crumb { display: inline-flex; gap: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); text-decoration: none; margin-bottom: 32px; }
+  .crumb:hover { color: var(--foreground); }
+  .f-hero .overline { margin-bottom: 12px; }
+  .f-hero h1 { font-size: clamp(2rem, 4.6vw, 3.2rem); margin-bottom: 16px; }
+  .f-hero h1 em { font-family: var(--font-sub); font-weight: 300; font-style: italic; color: var(--primary); }
+  .f-lead { max-width: 40rem; color: var(--muted-foreground); font-size: 16px; }
+  .f-body { padding: 48px 16px 64px; }
+  .f-more { margin-top: 56px; }
+  .f-more .overline { margin-bottom: 12px; }
+  .f-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .f-close { background: var(--lb-deep); color: #fff; padding: 64px 0; }
+  .f-close-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px; align-items: center; }
+  .f-close-over { color: var(--lb-aqua); margin-bottom: 12px; }
+  .f-close h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); color: #fff; }
+  .f-close-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .f-btn { background: var(--action); color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: 500; }
+  .f-link { color: var(--lb-aqua); text-decoration: none; font-size: 14px; }
+  @media (max-width: 800px) { .f-close-grid { grid-template-columns: 1fr; } }
+  @media (min-width: 768px) { .f-body { padding-left: 32px; padding-right: 32px; } }
+</style>

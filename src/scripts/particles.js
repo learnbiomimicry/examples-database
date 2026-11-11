@@ -44,6 +44,8 @@ export function particleBanner(canvas, { src, color = "#0A4564", density = 3 }) 
         for (let x = 0; x < iw; x += density) {
           const i = (y * iw + x) * 4;
           if (px[i + 3] < 60) continue;
+          // Skip near-white backgrounds (the silhouettes are JPEGs, as in Explora).
+          if (px[i] > 205 && px[i + 1] > 205 && px[i + 2] > 210) continue;
           const depth = 0.3 + (1 - y / ih) * 0.7;
           const t = Math.random();
           const radius = t < 0.35 ? rnd(0.7, 1.2) : t < 0.8 ? rnd(1.3, 2.2) * (0.75 + depth * 0.5) : rnd(2.4, 3.6) * (0.65 + depth * 0.45);

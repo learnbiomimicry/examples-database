@@ -16,9 +16,9 @@ const interests = facetValues(examples, "interest", 1);
 const FIRST = 9;
 
 const LEVEL_CONFIG = {
-  Form: { img: "/silhouettes/whale.svg", color: "#576E3D", tag: "LEVEL 01", lead: "Form-based", sub: "Emulating the shapes, patterns and physical forms found in nature." },
-  Process: { img: "/silhouettes/mushroom.svg", color: "#33668A", tag: "LEVEL 02", lead: "Process-based", sub: "Emulating nature's manufacturing processes and behaviours." },
-  System: { img: "/silhouettes/planet.svg", color: "#891236", tag: "LEVEL 03", lead: "Systems-based", sub: "Learning nature's deeper principles to fit and contribute to ecosystems." },
+  Form: { img: "/images/levels/whale.jpg", color: "#576E3D", tag: "LEVEL 01", lead: "Form-based", sub: "Emulating the shapes, patterns and physical forms found in nature." },
+  Process: { img: "/images/levels/mushroom.jpg", color: "#33668A", tag: "LEVEL 02", lead: "Process-based", sub: "Emulating nature's manufacturing processes and behaviours." },
+  System: { img: "/images/levels/planet.jpg", color: "#891236", tag: "LEVEL 03", lead: "Systems-based", sub: "Learning nature's deeper principles to fit and contribute to ecosystems." },
 };
 const levelSets = LEVELS.map((l) => ({ level: l, items: examples.filter((e) => e.levels.includes(l)).slice(0, 6) }));
 
@@ -34,24 +34,24 @@ const STORIES = [
   ["gecko-dry-adhesive", "The Gecko's Dry Adhesive"],
 ].map(([slug, title]) => ({ e: bySlug.get(slug), title })).filter((s) => s.e && (s.e.image || s.e.image2));
 
+// Cover photos are Explora's featured-list images (nature photography, no text).
 const lists = [
-  ["Top Biomimicry Examples for Architecture", "interest", "architecture"],
-  ["Top Biomimicry Examples for Product Design", "interest", "product-design"],
-  ["Top Biomimicry Examples of All Time", null, null],
-  ["Top Biomimicry Examples for Medicine", "interest", "medical-biotechnology"],
-  ["Top Biomimicry Examples for Materials", "interest", "materials"],
-  ["Top Biomimicry Examples for Engineering", "interest", "engineering"],
-].map(([label, key, slug]) => {
+  ["Top Biomimicry Examples for Architecture", "interest", "architecture", "architecture"],
+  ["Top Biomimicry Examples for Product Design", "interest", "product-design", "product-design"],
+  ["Top Biomimicry Examples of All Time", null, null, "all-time"],
+  ["Top Biomimicry Examples for Medicine", "interest", "medical-biotechnology", "medicine"],
+  ["Top Biomimicry Examples for Materials", "interest", "materials", "materials"],
+  ["Top Biomimicry Examples for Engineering", "interest", "engineering", "engineering"],
+].map(([label, key, slug, img]) => {
   const pool = key ? (facetValues(examples, key).find((v) => v.slug === slug)?.items ?? []) : examples;
-  const cover = pool.find((e) => e.image);
-  return pool.length ? { label, href: key ? facetUrl(key, slug) : "#best", img: cover?.image, count: pool.length } : null;
+  return pool.length ? { label, href: key ? facetUrl(key, slug) : "#best", img: `/images/lists/${img}.jpg`, count: pool.length } : null;
 }).filter(Boolean);
 
 const GUIDES = [
-  { sub: "Your Guide to", title: "A Field Guide to Biomimicry", tag: "Free eBook", href: CTA.fieldGuide.href, bg: "linear-gradient(160deg,#0A4564 0%,#33668A 100%)" },
-  { sub: "Your Guide to", title: "Biomimicry Short Courses", tag: "Courses", href: CTA.courses.href, bg: "linear-gradient(160deg,#576E3D 0%,#808F42 100%)" },
-  { sub: "Your Guide to", title: "The Best Biomimicry Educator Resources", tag: "Teaching", href: "https://www.learnbiomimicry.com/blog/best-biomimicry-educator-resources", bg: "linear-gradient(160deg,#891236 0%,#CF4257 100%)" },
-  { sub: "For R&D teams", title: "Your Biomimicry Opportunity Map", tag: "Explora", href: CTA.opportunityMap.href, bg: "linear-gradient(160deg,#231F20 0%,#0A4564 100%)" },
+  { sub: "Your Guide to", title: "A Field Guide to Biomimicry", tag: "Free eBook", href: CTA.fieldGuide.href, img: "/images/guides/field-guide.jpg" },
+  { sub: "Your Guide to", title: "Biomimicry Short Courses", tag: "Courses", href: CTA.courses.href, img: "/images/guides/short-courses.jpg" },
+  { sub: "Your Guide to", title: "The Best Biomimicry Educator Resources", tag: "Teaching", href: "https://www.learnbiomimicry.com/blog/best-biomimicry-educator-resources", img: "/images/guides/educators.jpg" },
+  { sub: "For R&D teams", title: "Your Biomimicry Opportunity Map", tag: "Explora", href: CTA.opportunityMap.href, img: "/images/guides/opportunity-map.jpg" },
 ];
 
 // Example of the Day: picked at build time, then (re)picked in the browser by date.
@@ -276,7 +276,9 @@ const jsonLd = { "@context": "https://schema.org", "@type": "CollectionPage", na
       </div>
       <div class="carousel">
         {GUIDES.map((g) => (
-          <a class="tall-card guide" href={g.href} style={`background:${g.bg}`}>
+          <a class="tall-card guide" href={g.href}>
+            <img src={g.img} alt="" loading="lazy" decoding="async" />
+            <div class="tall-shade"></div>
             <span class="guide-tag">{g.tag}</span>
             <div class="tall-copy">
               <p class="tall-over guide-over">{g.sub}</p>

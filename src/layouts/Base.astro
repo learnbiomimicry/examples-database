@@ -22,7 +22,9 @@ const path = Astro.url.pathname;
     {image && <meta property="og:image" content={image} />}
     <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
     <meta name="theme-color" content="#0A4564" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@1,300;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet" />
@@ -32,7 +34,7 @@ const path = Astro.url.pathname;
     <header class="site-header">
       <div class="container header-row">
         <a class="wordmark" href="/" aria-label="Learn Biomimicry Examples, home">
-          <span class="wm-learn">LEARN</span><span class="wm-bio">BIOMIMICRY</span><span class="wm-tag">Examples</span>
+          <img class="wm-logo" src="/images/logo.png" alt="Learn Biomimicry" width="149" height="32" /><span class="wm-tag">Examples</span>
         </a>
         <nav aria-label="Main">
           <a href="/" aria-current={path === "/" ? "page" : undefined}>All examples</a>
@@ -47,7 +49,7 @@ const path = Astro.url.pathname;
     <footer class="site-footer">
       <div class="container footer-grid">
         <div>
-          <p class="wordmark wordmark-light"><span class="wm-learn">LEARN</span><span class="wm-bio">BIOMIMICRY</span></p>
+          <a class="wordmark" href="https://www.learnbiomimicry.com"><img class="wm-logo" src="/images/logo-white.png" alt="Learn Biomimicry" width="121" height="32" /></a>
           <p class="footer-sub">Making biomimicry accessible, affordable and applicable.</p>
         </div>
         <div>
@@ -127,9 +129,8 @@ const path = Astro.url.pathname;
   /* Header (Explora: 64px sticky, blurred) */
   .site-header { position: sticky; top: 0; z-index: 50; height: 64px; background: rgba(255,255,255,0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
   .header-row { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .wordmark { display: flex; align-items: baseline; gap: 6px; text-decoration: none; color: var(--lb-charcoal); line-height: 1; white-space: nowrap; }
-  .wm-learn { font-family: var(--font-head); font-weight: 300; letter-spacing: 0.22em; font-size: 13px; }
-  .wm-bio { font-family: var(--font-head); font-weight: 900; letter-spacing: 0.02em; font-size: 17px; }
+  .wm-logo { display: block; height: 32px; width: auto; }
+  .wordmark { display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--lb-charcoal); line-height: 1; white-space: nowrap; }
   .wm-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary); margin-left: 8px; padding: 3px 8px; border: 1px solid rgba(10,69,100,0.25); border-radius: 999px; }
   nav { display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 400; }
   nav a { text-decoration: none; color: var(--muted-foreground); transition: color .2s; }

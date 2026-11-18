@@ -7,10 +7,22 @@ export const SITE = {
 };
 
 // Soft email gate on case study pages (see src/components/Gate.astro, functions/api/unlock.js).
+// Shared with Nature's Solutions: same Supabase `signup` function, fields and Kajabi route.
 export const GATE = {
   free: 3,                  // full case studies a visitor reads before the sign-up card
-  endpoint: "/api/unlock",  // Cloudflare Pages Function: Kajabi sign-up + long-lived cookie
-  source: "examples",       // sent to Kajabi so shared forms can tell sites apart
+  signupUrl: "https://johscicbgjmvxbwlzyat.supabase.co/functions/v1/signup",
+  source: "examples",       // stored in public.signups.source
+  cookieUrl: "/api/unlock", // Cloudflare Pages Function that sets the two-year lb_access cookie
+  // Keys the signup function maps to Kajabi's "Area of Interest" options. Keep in step with it.
+  interests: [
+    ["product-design", "Product design"],
+    ["built-environment", "Built environment and architecture"],
+    ["biomaterials", "Biomaterials"],
+    ["education", "Education"],
+    ["ecological-restoration", "Ecological restoration"],
+    ["business", "Business and innovation"],
+    ["other", "Something else"],
+  ],
 };
 
 export const CTA = {

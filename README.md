@@ -51,15 +51,17 @@ The site only changes when it rebuilds. To rebuild automatically:
 
 ## Email gate
 
-Visitors read 3 case studies in full, then a card asks for name and email (and whether they're exploring for themselves or an organisation). Every case study then stays open on that device. The full text is always in the HTML, so search engines and AI agents are never gated.
+Visitors read 3 case studies in full, then a card asks them to join free: name, email, their field and an email-consent tick. Every case study then stays open on that device. The full text is always in the HTML, so search engines and AI agents are never gated.
 
-- `src/components/Gate.astro`: the card and the counting, in the browser.
-- `functions/api/unlock.js`: a Cloudflare Pages Function. It sends the sign-up to Kajabi and sets a two-year `lb_access` cookie on `.learnbiomimicry.com`, so other Learn Biomimicry subdomains can share the unlock.
-- Links in Kajabi emails can add `?access=lb` to any examples URL to unlock that device without the form.
+It shares one route with the Nature's Solutions gate in Explora:
 
-To connect Kajabi, add these in Cloudflare Pages → Settings → Variables and Secrets (as encrypted secrets, for Production and Preview):
+1. The browser posts to the Supabase edge function `signup` (in the Explora repo) with `source: "examples"`.
+2. The function saves the person in `public.signups`, then sends them to a Zapier webhook.
+3. The Zap submits Kajabi's "Free eBook Funnel - Lead Capture" form, so the existing automations send the eBook sequence for their field and add the interest tags.
 
-- `KAJABI_CLIENT_ID` and `KAJABI_CLIENT_SECRET`: a User API Key from Kajabi → Settings → Security → User API Keys.
-- `KAJABI_FORM_ID`: the shared sign-up form. Custom fields 1 to 3 on that form are Source, Exploring for and Organisation.
+Files here:
 
-Without them the gate still works; sign-ups just aren't recorded in Kajabi.
+- `src/components/Gate.astro`: the card, the counting and the form, in the browser.
+- `functions/api/unlock.js`: a Cloudflare Pages Function that only sets a two-year `lb_access` cookie on `.learnbiomimicry.com`. Safari clears script-set storage after 7 days without a visit; it keeps this cookie, and other Learn Biomimicry subdomains can read it.
+- "Already joined?" unlocks a new device with just an email. Links in Kajabi emails can add `?access=lb` to any examples URL to unlock that device without the form.
+- The interest keys in `src/lib/config.js` must match the `INTERESTS` map in the `signup` function.

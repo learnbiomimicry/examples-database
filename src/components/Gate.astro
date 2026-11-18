@@ -1,0 +1,178 @@
+---
+// Soft email gate. The full case study is always in the HTML, so search engines and
+// AI agents read everything (the open tier in the Explora V2.0 strategy). People get
+// GATE.free case studies, then a one-time name + email unlocks every case study for good.
+import { GATE } from "../lib/config.js";
+const { slug, total } = Astro.props;
+---
+<div class="gate" data-gate data-slug={slug} data-free={GATE.free} data-source={GATE.source} hidden>
+  <div class="gate-card">
+    <p class="gate-over">Free access</p>
+    <h2 class="gate-title">Keep exploring nature's solutions</h2>
+    <p class="gate-text" data-gate-intro>You've read your {GATE.free} free case studies. Tell us who you are and all {total} open up for good, with every breakdown and design prompt.</p>
+
+    <form class="gate-form" data-gate-form novalidate>
+      <div class="gate-row" data-new-only>
+        <label class="gate-field"><span>Name</span><input name="name" autocomplete="name" required maxlength="120" /></label>
+      </div>
+      <div class="gate-row">
+        <label class="gate-field"><span>Email</span><input name="email" type="email" autocomplete="email" required maxlength="200" /></label>
+      </div>
+      <fieldset class="gate-who" data-new-only>
+        <legend>I'm exploring for</legend>
+        <label><input type="radio" name="audience" value="myself" checked /> Myself</label>
+        <label><input type="radio" name="audience" value="organisation" /> My organisation</label>
+      </fieldset>
+      <div class="gate-row" data-org hidden>
+        <label class="gate-field"><span>Organisation</span><input name="organisation" autocomplete="organization" maxlength="120" /></label>
+      </div>
+      <p class="gate-error" data-gate-error role="alert" hidden></p>
+      <button type="submit" class="gate-btn" data-gate-btn>Unlock all {total} examples</button>
+    </form>
+
+    <p class="gate-small" data-new-only>Free, no password. We'll send you the occasional nature-inspired idea; unsubscribe any time. <a href="https://www.learnbiomimicry.com/privacy-policy">Privacy policy</a></p>
+    <button type="button" class="gate-switch" data-gate-switch>Already signed up? Unlock with your email</button>
+  </div>
+</div>
+
+<script>
+  import { GATE } from "../lib/config.js";
+
+  const gate = document.querySelector("[data-gate]");
+  const SEEN = "lb_seen_cases";
+  const ACCESS = "lb_access";
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+  const hasAccess = () => /(?:^|;\s*)lb_access=1/.test(document.cookie) || store.get(ACCESS) === "1";
+  const markAccess = () => {
+    store.set(ACCESS, "1");
+    // Fallback if the server cookie didn't land (e.g. on a preview domain).
+    if (!/(?:^|;\s*)lb_access=1/.test(document.cookie)) document.cookie = `${ACCESS}=1; Path=/; Max-Age=63072000; SameSite=Lax; Secure`;
+  };
+
+  const main = document.querySelector(".cs .main");
+  const gated = document.querySelector("[data-gated]");
+  const story = document.querySelector("[data-story]");
+
+  function lock() {
+    main.classList.add("is-locked");
+    gate.hidden = false;
+    gated?.setAttribute("inert", "");
+    gated?.setAttribute("aria-hidden", "true");
+  }
+  function unlock() {
+    markAccess();
+    main.classList.remove("is-locked");
+    gate.hidden = true;
+    gated?.removeAttribute("inert");
+    gated?.removeAttribute("aria-hidden");
+    story?.classList.add("is-open");
+    document.querySelector("[data-read-more]")?.setAttribute("hidden", "");
+    gated?.querySelectorAll(".reveal").forEach((el) => el.classList.add("is-in"));
+  }
+
+  // Links in Kajabi emails carry ?access=lb: unlock this device without the form.
+  const url = new URL(location.href);
+  if (url.searchParams.get("access") === "lb") {
+    markAccess();
+    fetch(`${GATE.endpoint}?mark=1`, { credentials: "same-origin" }).catch(() => {});
+    url.searchParams.delete("access");
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }
+
+  if (gate && main && !hasAccess()) {
+    const slug = gate.dataset.slug;
+    const free = Number(gate.dataset.free);
+    let seen = [];
+    try { seen = JSON.parse(store.get(SEEN) || "[]"); } catch {}
+    if (!seen.includes(slug)) {
+      if (seen.length < free) { seen.push(slug); store.set(SEEN, JSON.stringify(seen)); }
+      else lock();
+    }
+  }
+
+  // Form
+  const form = gate?.querySelector("[data-gate-form]");
+  const err = gate?.querySelector("[data-gate-error]");
+  const btn = gate?.querySelector("[data-gate-btn]");
+  const org = gate?.querySelector("[data-org]");
+  const switchBtn = gate?.querySelector("[data-gate-switch]");
+  let returning = false;
+
+  form?.addEventListener("change", (ev) => {
+    if (ev.target.name === "audience") org.hidden = ev.target.value !== "organisation";
+  });
+
+  switchBtn?.addEventListener("click", () => {
+    returning = !returning;
+    gate.classList.toggle("is-returning", returning);
+    gate.querySelectorAll("[data-new-only]").forEach((el) => (el.hidden = returning));
+    if (returning) org.hidden = true;
+    form.elements.name.required = !returning;
+    btn.textContent = returning ? "Unlock" : btn.dataset.label;
+    switchBtn.textContent = returning ? "New here? Sign up free" : "Already signed up? Unlock with your email";
+    err.hidden = true;
+  });
+  if (btn) btn.dataset.label = btn.textContent;
+
+  form?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = form.elements;
+    const email = f.email.value.trim();
+    const name = f.name.value.trim();
+    const say = (msg) => { err.textContent = msg; err.hidden = false; };
+    if (!returning && !name) return say("Please add your name.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return say("Please check your email address.");
+    err.hidden = true;
+    btn.disabled = true;
+    btn.textContent = "Unlocking...";
+    const audience = f.audience.value;
+    const body = returning
+      ? { mode: "returning", email }
+      : { name, email, audience, organisation: audience === "organisation" ? f.organisation.value.trim() : "", source: gate.dataset.source, page: location.pathname };
+    try {
+      const res = await fetch(GATE.endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(body) });
+      if (res.status === 422) {
+        const { error } = await res.json().catch(() => ({}));
+        btn.disabled = false; btn.textContent = returning ? "Unlock" : btn.dataset.label;
+        return say(error === "name" ? "Please add your name." : "Please check your email address.");
+      }
+    } catch {
+      // Network trouble: still let them in rather than lose them.
+    }
+    unlock();
+  });
+</script>
+
+<style>
+  .gate { position: relative; z-index: 2; margin: -8px 0 40px; }
+  .gate-card { background: #fff; border: 1px solid rgba(10,69,100,0.14); border-radius: 10px; padding: 32px 32px 24px; box-shadow: 0 18px 50px -20px rgba(10,69,100,0.35); max-width: 560px; }
+  .gate-over { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--lb-web); }
+  .gate-title { font-family: var(--font-head); font-weight: 900; font-size: 26px; line-height: 1.15; color: var(--lb-deep); margin: 8px 0 10px; }
+  .gate-text { font-size: 15px; line-height: 1.6; color: rgba(35,31,32,0.78); margin-bottom: 20px; }
+  .gate-form { display: grid; gap: 12px; }
+  .gate-field { display: grid; gap: 6px; font-size: 12px; color: rgba(35,31,32,0.7); }
+  .gate-field input { font: inherit; font-size: 15px; padding: 11px 12px; border: 1px solid rgba(35,31,32,0.2); border-radius: 6px; background: #fff; color: var(--lb-charcoal); }
+  .gate-field input:focus { outline: 2px solid var(--lb-web); outline-offset: 1px; border-color: transparent; }
+  .gate-who { border: 0; padding: 0; margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: rgba(35,31,32,0.82); }
+  .gate-who legend { width: 100%; font-size: 12px; color: rgba(35,31,32,0.7); margin-bottom: 6px; }
+  .gate-who label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  .gate-error { font-size: 13px; color: var(--lb-berry); }
+  .gate-btn { margin-top: 4px; border: 0; border-radius: 999px; background: var(--lb-web); color: #fff; font-weight: 600; font-size: 15px; padding: 13px 22px; cursor: pointer; transition: background .2s; }
+  .gate-btn:hover { background: var(--lb-deep); }
+  .gate-btn:disabled { opacity: .7; cursor: wait; }
+  .gate-small { font-size: 12px; line-height: 1.5; color: rgba(35,31,32,0.6); margin-top: 14px; }
+  .gate-small a { color: inherit; }
+  .gate-switch { border: 0; background: none; padding: 0; margin-top: 12px; font-size: 13px; color: var(--lb-deep); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  @media (max-width: 640px) { .gate-card { padding: 24px 20px 20px; } .gate-title { font-size: 22px; } }
+
+  /* Locked state: the content is there (and readable by machines) but faded under the card. */
+  :global(.cs .main.is-locked [data-story]),
+  :global(.cs .main.is-locked [data-read-more]) { display: none !important; }
+  :global(.cs .main.is-locked [data-gated]) { max-height: 520px; overflow: hidden; filter: blur(5px); opacity: .55; user-select: none; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, transparent 100%); }
+  :global(.cs .main.is-locked [data-gated] .reveal) { opacity: 1; transform: none; }
+</style>

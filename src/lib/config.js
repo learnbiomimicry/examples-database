@@ -6,6 +6,13 @@ export const SITE = {
   home: "https://www.learnbiomimicry.com",
 };
 
+// Soft email gate on case study pages (see src/components/Gate.astro, functions/api/unlock.js).
+export const GATE = {
+  free: 3,                  // full case studies a visitor reads before the sign-up card
+  endpoint: "/api/unlock",  // Cloudflare Pages Function: Kajabi sign-up + long-lived cookie
+  source: "examples",       // sent to Kajabi so shared forms can tell sites apart
+};
+
 export const CTA = {
   fieldGuide: {
     href: "https://www.learnbiomimicry.com/fieldguide",

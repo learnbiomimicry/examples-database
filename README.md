@@ -48,3 +48,18 @@ The site only changes when it rebuilds. To rebuild automatically:
 | Filter landing pages | `src/pages/[facet]/[value].astro` |
 | Home page and filters | `src/pages/index.astro` |
 | Header, footer, brand styles | `src/layouts/Base.astro` |
+
+## Email gate
+
+Visitors read 3 case studies in full, then a card asks for name and email (and whether they're exploring for themselves or an organisation). Every case study then stays open on that device. The full text is always in the HTML, so search engines and AI agents are never gated.
+
+- `src/components/Gate.astro`: the card and the counting, in the browser.
+- `functions/api/unlock.js`: a Cloudflare Pages Function. It sends the sign-up to Kajabi and sets a two-year `lb_access` cookie on `.learnbiomimicry.com`, so other Learn Biomimicry subdomains can share the unlock.
+- Links in Kajabi emails can add `?access=lb` to any examples URL to unlock that device without the form.
+
+To connect Kajabi, add these in Cloudflare Pages → Settings → Variables and Secrets (as encrypted secrets, for Production and Preview):
+
+- `KAJABI_CLIENT_ID` and `KAJABI_CLIENT_SECRET`: a User API Key from Kajabi → Settings → Security → User API Keys.
+- `KAJABI_FORM_ID`: the shared sign-up form. Custom fields 1 to 3 on that form are Source, Exploring for and Organisation.
+
+Without them the gate still works; sign-ups just aren't recorded in Kajabi.

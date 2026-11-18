@@ -4,6 +4,7 @@
 // the biomimicry breakdown table, design prompts and related examples.
 import Base from "../layouts/Base.astro";
 import Card from "../components/Card.astro";
+import Gate from "../components/Gate.astro";
 import { getExamples, facetUrl, paragraphs, slugify } from "../lib/data.js";
 import { SITE, CTA } from "../lib/config.js";
 
@@ -113,6 +114,9 @@ const promptHref = (p) => `https://explora.network/explora?prompt=${encodeURICom
             )}
           </section>
 
+          <Gate slug={e.slug} total={all.length} />
+
+          <div class="gated" data-gated>
           {breakdown.length > 0 && (
             <>
               <div class="divider tall"></div>
@@ -155,6 +159,7 @@ const promptHref = (p) => `https://explora.network/explora?prompt=${encodeURICom
               </section>
             </>
           )}
+          </div>
         </div>
 
         <aside class="side">

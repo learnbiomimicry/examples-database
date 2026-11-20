@@ -1,5 +1,16 @@
 # Notes for Claude
 
+## Read first
+
+Read these before planning or building anything. Every build brief names the section of the strategy it serves; if a task doesn't serve the strategy, we don't build it this quarter.
+
+1. [docs/STRATEGY.md](docs/STRATEGY.md): Explora V2.0 Strategy, the single source of truth. Start here.
+2. [docs/migration-brief.md](docs/migration-brief.md): moving this site to explora.network and linking case studies with nature's solutions.
+3. [docs/function-first-brief.md](docs/function-first-brief.md): the "How might nature help us…?" front door and the eight "I need to…" doors.
+4. [docs/website-copy.md](docs/website-copy.md): draft copy for the home, Biomimicry for Claude and Team Sprint pages. Lines marked [confirm] need Alistair's answer before going live.
+
+## House rules
+
 - Owner: Alistair Daynes, Learn Biomimicry. He signs off anything public.
 - Copy rules for anything written on the site: never use the em dash; write "re-" words with the RE in brackets, e.g. "(re)connect".
 - Brand: Explora layout and motion with the Learn Biomimicry look. See BRAND.md for colours, fonts and motion rules.

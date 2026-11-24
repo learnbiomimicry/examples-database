@@ -1,5 +1,9 @@
 # Brief: move the examples database to explora.network
 
+> **Superseded on 24 Nov 2026.** The examples site does not move to explora.network; it stays at examples.learnbiomimicry.com (see `docs/STRATEGY.md`). Nature's solutions get their own static site at explora.learnbiomimicry.com.
+> **Still holds:** the static site and real HTML, published rows only, the free-reads sign-up (section 6), and the two-way links between examples and solutions (section 5).
+> **No longer applies:** the explora.network URL map, the domain switch and (re)directs (section 7), and `/team-sprint/`. The B2B page is now the company pilot page on examples.learnbiomimicry.com.
+
 **For:** Claude Code, working in the `learnbiomimicry/examples-database` repo
 **Owner:** Alistair Daynes, Learn Biomimicry
 **Date:** 19 November 2026

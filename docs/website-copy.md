@@ -1,5 +1,7 @@
 # Explora website copy
 
+> **Updated 24 Nov 2026.** These pages now live on examples.learnbiomimicry.com, not explora.network. "Team Sprint" is replaced by two offers: Sprint Two (group, $895, 12 seats, from 25 Jan 2027) and the company pilot ($7,500 for one challenge over four weeks, sold by calls only). Use the copy below as a starting point and check every offer detail against `docs/STRATEGY.md`.
+
 Nov 19, 2026 · @Alistair Daynes
 
 First drafts of the three key pages on explora.network, written to lead with the Explora brand. Lines marked [confirm] need a fact or a decision before going live.

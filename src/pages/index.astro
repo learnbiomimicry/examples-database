@@ -51,7 +51,7 @@ const GUIDES = [
   { sub: "Your Guide to", title: "A Field Guide to Biomimicry", tag: "Free eBook", href: CTA.fieldGuide.href, img: "/images/guides/field-guide.jpg" },
   { sub: "Your Guide to", title: "Biomimicry Short Courses", tag: "Courses", href: CTA.courses.href, img: "/images/guides/short-courses.jpg" },
   { sub: "Your Guide to", title: "The Best Biomimicry Educator Resources", tag: "Teaching", href: "https://www.learnbiomimicry.com/blog/best-biomimicry-educator-resources", img: "/images/guides/educators.jpg" },
-  { sub: "For R&D teams", title: "Your Biomimicry Opportunity Map", tag: "Explora", href: CTA.opportunityMap.href, img: "/images/guides/opportunity-map.jpg" },
+  { sub: "For R&D teams", title: "A Company Pilot", tag: "Explora", href: CTA.companyPilot.href, img: "/images/guides/opportunity-map.jpg" },
 ];
 
 // Example of the Day: picked at build time, then (re)picked in the browser by date.
@@ -296,10 +296,10 @@ const jsonLd = { "@context": "https://schema.org", "@type": "CollectionPage", na
         <div>
           <p class="overline closing-over">For R&amp;D and product teams</p>
           <h2>Find the problems worth solving in your own products</h2>
-          <p class="closing-sub">The Biomimicry Opportunity Map scans your company website and suggests nature-inspired challenges for each product line.</p>
+          <p class="closing-sub">Bring us one stuck problem. In a four-week company pilot, a biomimicry mentor takes your team from challenge to nature-inspired concepts and a spec you can test.</p>
         </div>
         <div class="closing-actions">
-          <a class="closing-btn" href={CTA.opportunityMap.href}>Map my opportunities</a>
+          <a class="closing-btn" href={CTA.companyPilot.href}>{CTA.companyPilot.button}</a>
           <a class="closing-link" href={CTA.fieldGuide.href}>Or start with the free Field Guide &rarr;</a>
         </div>
       </div>

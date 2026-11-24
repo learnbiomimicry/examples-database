@@ -6,6 +6,11 @@ export const SITE = {
   home: "https://www.learnbiomimicry.com",
 };
 
+// Nature's solutions: a separate static site built by scripts/explora/demo_site.py --site.
+export const EXPLORA = {
+  url: "https://explora.learnbiomimicry.com",
+};
+
 // Soft email gate on case study pages (see src/components/Gate.astro, functions/api/unlock.js).
 // Shared with Nature's Solutions: same Supabase `signup` function, fields and Kajabi route.
 export const GATE = {
@@ -25,6 +30,12 @@ export const GATE = {
   ],
 };
 
+// Company pilot page (/company-pilot/). Add the scheduling link here and the
+// "Book a 20-minute call" buttons appear; until then the page shows the enquiry form only.
+export const PILOT = {
+  bookCall: "",
+};
+
 export const CTA = {
   fieldGuide: {
     href: "https://www.learnbiomimicry.com/fieldguide",
@@ -32,11 +43,12 @@ export const CTA = {
     text: "The eBook and 7-day email course that teach you to find and use strategies like these.",
     button: "Get the Field Guide",
   },
-  opportunityMap: {
-    href: "https://explora.network/get-started",
-    title: "For R&D teams: your Biomimicry Opportunity Map",
-    text: "Enter your company website and see where nature-inspired innovation could help your products.",
-    button: "Map my opportunities",
+  // Replaces the Opportunity Map on the retired Lovable app (24 Nov 2026 strategy).
+  companyPilot: {
+    href: "/company-pilot/",
+    title: "For R&D teams: a company pilot",
+    text: "Bring us one stuck problem. In four weeks, a mentor takes your team from challenge to nature-inspired concepts and a spec.",
+    button: "See the company pilot",
   },
   courses: {
     href: "https://www.learnbiomimicry.com/short-courses",

@@ -1,9 +1,9 @@
 // Loads the examples once per build and shapes them for the pages.
 import { readFileSync } from "node:fs";
-import { SUPABASE } from "./config.js";
+import { SUPABASE, EXPLORA } from "./config.js";
 
 const FIELDS = [
-  "slug", "title", "organism", "company", "location", "industry_id", "category_id",
+  "id", "slug", "title", "organism", "company", "location", "industry_id", "category_id",
   "mimicry_levels", "content_type", "summary", "problem_statement", "natural_model",
   "adaptation_emulated", "innovation", "breakdown_function", "breakdown_mechanism",
   "breakdown_principle", "breakdown_result", "key_metrics", "banner_image1_url",
@@ -90,14 +90,37 @@ async function fetchRows() {
   }
 }
 
+// Each case study's nature's solution on explora.learnbiomimicry.com (the other half of the two-way links).
+// Row level security only returns published solutions; anything else is left out.
+async function fetchSolutions() {
+  const url = `${SUPABASE.url}/rest/v1/case_study_mechanisms?select=case_study_id,mechanisms(slug,name)`;
+  try {
+    const res = await fetch(url, { headers: { apikey: SUPABASE.key, Authorization: `Bearer ${SUPABASE.key}` } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const map = new Map();
+    for (const r of await res.json()) {
+      if (!r.mechanisms?.slug) continue;
+      const list = map.get(r.case_study_id) || [];
+      list.push({ name: r.mechanisms.name, href: `${EXPLORA.url}/solutions/${r.mechanisms.slug}/` });
+      map.set(r.case_study_id, list);
+    }
+    console.log(`[data] ${map.size} examples linked to nature's solutions`);
+    return map;
+  } catch (e) {
+    console.warn(`[data] nature's solutions unavailable (${e.message}); pages build without the links`);
+    return new Map();
+  }
+}
+
 let cache;
 export async function getExamples() {
   if (cache) return cache;
-  const rows = await fetchRows();
+  const [rows, solutions] = await Promise.all([fetchRows(), fetchSolutions()]);
   cache = rows.map((r) => {
     const c = country(r.location);
     return {
       ...r,
+      solutions: solutions.get(r.id) || [],
       image: image(r.banner_image1_url),
       image2: image(r.banner_image2_url),
       prompts: prompts(r.design_prompts),

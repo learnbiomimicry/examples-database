@@ -1,0 +1,190 @@
+---
+// Company pilot sales page: sells the outcome to the budget holder, then captures interest.
+// Copy adapted from the Team Sprint draft in docs/website-copy.md, updated to the
+// 24 Nov 2026 offer (docs/STRATEGY.md): one challenge, four weeks, sold by call only.
+// The form posts to the shared Supabase `signup` function with source "company-pilot".
+import Base from "../layouts/Base.astro";
+import { CTA, GATE, PILOT } from "../lib/config.js";
+
+const title = "Company pilot: nature-inspired R&D for your toughest problem";
+const description = "Bring us one problem your team is stuck on. In four weeks, a biomimicry mentor takes it from challenge to nature-inspired concepts and a spec you can test.";
+
+const outcomes = [
+  ["A sharp challenge", "A clear \"How might nature…?\" question, its root causes and a needs list your solution must meet."],
+  ["Nature's best strategies", "About five biological models, each with its evidence and a confidence level."],
+  ["Three or four concepts", "Each with its design principle, likely materials, a way to make it and the existing technology closest to it."],
+  ["A spec for the winner", "Every concept scored against your needs, target values, and a prototype and test plan."],
+];
+const steps = [
+  ["Week 1", "Find the problem", "We map the problem with your team and agree the needs list."],
+  ["Week 2", "Explore nature", "We search nature's solutions and shortlist the strongest strategies."],
+  ["Week 3", "Design concepts", "A working session with your team to build and compare concepts."],
+  ["Week 4", "Engineer the spec", "We score the concepts, write the spec and present it to your decision makers."],
+];
+const examples = [
+  "Cutting energy use in a heating, cooling or drying step",
+  "Swapping out a toxic or hard-to-(re)cycle material",
+  "Making a part lighter without losing strength",
+  "Keeping a surface clean without chemicals or water",
+];
+const faqs = [
+  ["Does anyone on our team need to know biomimicry?", "No. We bring the method; you bring the problem and the know-how. Your team learns the method as they go."],
+  ["Who owns what we create?", "You do. Everything we make for your challenge belongs to your company."],
+  ["Is our problem kept private?", "Yes. We're happy to sign your NDA, and nothing from your pilot is shared without your written permission."],
+  ["What if nature has no answer?", "It almost always does. If the evidence is thin, we tell you at the end of week 2, before most of the work is done."],
+];
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+};
+---
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <main class="pilot">
+    <section class="p-hero">
+      <div class="container p-wrap">
+        <p class="mono-label light">For R&amp;D, product and sustainability teams</p>
+        <h1>Bring us one stuck problem. Leave with a spec.</h1>
+        <p class="lede">A company pilot takes one challenge through four steps with an experienced biomimicry mentor and your own team. In four weeks you have nature-inspired concepts, scored against your needs, and a plan for the first prototype.</p>
+        <div class="p-actions">
+          {PILOT.bookCall && <a class="p-btn" href={PILOT.bookCall}>Book a 20-minute call</a>}
+          <a class:list={["p-btn", { ghost: PILOT.bookCall }]} href="#enquire">Tell us about your challenge</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="container p-wrap p-body">
+      <section>
+        <p class="mono-label">Who it's for</p>
+        <h2>A problem that conventional thinking hasn't cracked</h2>
+        <ul class="ticks">{examples.map((x) => <li>{x}</li>)}</ul>
+      </section>
+
+      <section>
+        <p class="mono-label">What you get</p>
+        <h2>A dossier your team can act on and your budget holder can sign off</h2>
+        <ol class="outcomes">
+          {outcomes.map(([h, t], i) => <li><span class="n">{i + 1}</span><div><h3>{h}</h3><p>{t}</p></div></li>)}
+        </ol>
+      </section>
+
+      <section>
+        <p class="mono-label">How it works</p>
+        <h2>Four weeks, online, one challenge</h2>
+        <div class="weeks">
+          {steps.map(([w, h, t]) => <div class="week"><p class="mono-label">{w}</p><h3>{h}</h3><p>{t}</p></div>)}
+        </div>
+      </section>
+
+      <section>
+        <p class="mono-label">Proof</p>
+        <h2>It has worked before</h2>
+        <p>One of our first Sprinters used this workflow to file a provisional biomimetic patent in six weeks. Companies have sent their innovation teams through our Biomimicry Practitioner Programme since 2023.</p>
+      </section>
+
+      <section id="enquire" class="enquire">
+        <p class="mono-label">Start here</p>
+        <h2>Tell us about your challenge</h2>
+        <p class="sub">We'll reply within two working days to set up a call.</p>
+        <form id="pilot-form" novalidate>
+          <div class="row">
+            <label>Your name<input name="name" type="text" autocomplete="name" required /></label>
+            <label>Work email<input name="email" type="email" autocomplete="email" required /></label>
+          </div>
+          <div class="row">
+            <label>Company<input name="company" type="text" autocomplete="organization" required /></label>
+            <label>Your role<input name="role" type="text" autocomplete="organization-title" /></label>
+          </div>
+          <label>Your challenge, in a line or two<textarea name="challenge" rows="3" required placeholder="For example: our drying step uses too much energy and we can't find a way to cut it."></textarea></label>
+          <input class="hp" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <label class="tick"><input name="consent" type="checkbox" required /><span>Yes, Learn Biomimicry may contact me about a company pilot.</span></label>
+          <button type="submit">Send</button>
+          <p class="err" role="alert"></p>
+        </form>
+        <div class="done" hidden>
+          <h3>Thank you. We'll be in touch within two working days.</h3>
+          {PILOT.bookCall ? <p>Prefer to pick a time now? <a href={PILOT.bookCall}>Book a 20-minute call</a>.</p> : null}
+        </div>
+      </section>
+
+      <section>
+        <p class="mono-label">Questions</p>
+        <h2>Before you ask</h2>
+        <dl class="faq">{faqs.map(([q, a]) => <><dt>{q}</dt><dd>{a}</dd></>)}</dl>
+      </section>
+
+      <section class="addon">
+        <p class="mono-label">Build your in-house capability</p>
+        <h2>Want someone on your team to lead this next time?</h2>
+        <p>Add places on the Biomimicry Practitioner Programme, and they keep using the Explora tools for 12 months. Or start with the <a href={CTA.fieldGuide.href}>free Field Guide to Biomimicry</a>.</p>
+      </section>
+    </div>
+  </main>
+</Base>
+
+<script define:vars={{ url: GATE.signupUrl }}>
+  const form = document.getElementById("pilot-form");
+  const err = form.querySelector(".err");
+  const btn = form.querySelector("button");
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(form);
+    const body = {
+      source: "company-pilot", page: location.pathname,
+      name: String(f.get("name") || "").trim(), email: String(f.get("email") || "").trim(),
+      company: String(f.get("company") || "").trim(), role: String(f.get("role") || "").trim(),
+      challenge: String(f.get("challenge") || "").trim(), website: String(f.get("website") || ""),
+      consent: f.get("consent") === "on",
+    };
+    err.textContent = "";
+    if (!body.name) return (err.textContent = "Please add your name.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return (err.textContent = "Please check your email address.");
+    if (!body.company) return (err.textContent = "Please add your company.");
+    if (!body.challenge) return (err.textContent = "Please tell us about your challenge in a line or two.");
+    if (!body.consent) return (err.textContent = "Please tick the box so we can contact you.");
+    btn.disabled = true; btn.textContent = "Sending...";
+    try {
+      const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d.error || "");
+      form.hidden = true; form.nextElementSibling.hidden = false;
+    } catch (e) {
+      err.textContent = e.message && e.message.startsWith("Please") ? e.message : "We could not send that just now. Please try again in a moment.";
+      btn.disabled = false; btn.textContent = "Send";
+    }
+  });
+</script>
+
+<style>
+  .p-hero { background: var(--lb-deep); color: #fff; padding: 72px 0 56px; }
+  .p-wrap { max-width: 880px; }
+  .mono-label.light { color: var(--lb-aqua); }
+  .p-hero h1 { font-size: clamp(2rem, 5vw, 3rem); color: #fff; margin: 10px 0 16px; }
+  .lede { font-size: 18px; color: #e8f2f8; max-width: 720px; }
+  .p-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .p-btn { background: var(--action); color: #fff; text-decoration: none; padding: 13px 26px; border-radius: 999px; font-weight: 500; }
+  .p-btn.ghost { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); }
+  .p-body { padding: 56px 16px 72px; display: grid; gap: 56px; }
+  .p-body h2 { font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.4rem, 3vw, 1.9rem); margin: 6px 0 18px; }
+  .p-body h3 { font-size: 17px; margin-bottom: 4px; }
+  .ticks { padding-left: 20px; display: grid; gap: 8px; }
+  .outcomes { list-style: none; padding: 0; display: grid; gap: 18px; }
+  .outcomes li { display: flex; gap: 16px; align-items: flex-start; }
+  .outcomes .n { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--action); color: #fff; display: grid; place-items: center; font-weight: 600; }
+  .weeks { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .week { background: var(--surface); border-radius: 14px; padding: 18px; }
+  .enquire { background: var(--surface); border-radius: 20px; padding: 28px 22px; }
+  .sub { color: var(--muted-foreground); margin-top: -8px; margin-bottom: 18px; }
+  form { display: grid; gap: 14px; }
+  .row { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; }
+  input[type="text"], input[type="email"], textarea { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--background); color: var(--foreground); width: 100%; }
+  .tick { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; color: var(--muted-foreground); }
+  .tick input { margin-top: 4px; }
+  .hp { position: absolute; left: -9999px; }
+  form button { justify-self: start; background: var(--action); color: #fff; border: 0; font: inherit; font-weight: 500; padding: 12px 28px; border-radius: 999px; cursor: pointer; }
+  form button[disabled] { opacity: 0.6; cursor: wait; }
+  .err { color: #c2412d; font-size: 14px; min-height: 1em; }
+  .faq dt { font-weight: 600; margin-top: 16px; }
+  .faq dd { margin: 4px 0 0; color: var(--muted-foreground); }
+</style>

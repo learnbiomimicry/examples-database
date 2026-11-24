@@ -130,14 +130,16 @@ const promptHref = (p) => `https://explora.network/explora?prompt=${encodeURICom
                     <div class:list={["tr", { odd: i % 2 === 1 }]}><div class="term">{term}</div><div class="def">{def}</div></div>
                   ))}
                 </div>
-                <a class="explora-cta" href={CTA.opportunityMap.href}>
-                  <div class="ec-head">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 21c5.5 0 10-4 10-9s-4.5-9-10-9S2 7 2 12c0 1.8.6 3.5 1.6 5L2 21l4.4-1.4A10.7 10.7 0 0 0 12 21z"/></svg>
-                    <p>Find your own nature-inspired opportunities</p>
-                  </div>
-                  <p class="ec-text">Inspired by {e.title}? The Biomimicry Opportunity Map scans your company website and suggests challenges worth solving the way nature would.</p>
-                  <span class="ec-go">Get started &rarr;</span>
-                </a>
+                {e.solutions.map((s) => (
+                  <a class="explora-cta" href={s.href}>
+                    <div class="ec-head">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 21c5.5 0 10-4 10-9s-4.5-9-10-9S2 7 2 12c0 1.8.6 3.5 1.6 5L2 21l4.4-1.4A10.7 10.7 0 0 0 12 21z"/></svg>
+                      <p>Nature's solution in this example</p>
+                    </div>
+                    <p class="ec-text">{s.name}. See how it works in three steps, how sure we are, and other places nature's strategy could help.</p>
+                    <span class="ec-go">See it on Explora &rarr;</span>
+                  </a>
+                ))}
               </section>
             </>
           )}

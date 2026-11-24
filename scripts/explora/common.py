@@ -35,12 +35,23 @@ def slugify(text, limit=80):
 
 
 class Supabase:
-    """Tiny PostgREST client. Uses the service role key, so keep it server side."""
+    """Tiny PostgREST client. Uses the service role key, so keep it server side.
 
-    def __init__(self):
+    public=True uses the publishable key instead: read-only, published rows only
+    (row level security). The public site build uses this, so it needs no secret.
+    """
+
+    PUBLIC_URL = "https://johscicbgjmvxbwlzyat.supabase.co"
+    PUBLIC_KEY = "sb_publishable_MB5kuJONlklys9duAH7hIg_RO48XwNU"  # also in src/lib/config.js
+
+    def __init__(self, public=False):
         load_env()
-        self.url = need("SUPABASE_URL").rstrip("/") + "/rest/v1/"
-        key = need("SUPABASE_SERVICE_ROLE_KEY")
+        if public:
+            self.url = os.environ.get("SUPABASE_URL", self.PUBLIC_URL).rstrip("/") + "/rest/v1/"
+            key = os.environ.get("SUPABASE_ANON_KEY", self.PUBLIC_KEY)
+        else:
+            self.url = need("SUPABASE_URL").rstrip("/") + "/rest/v1/"
+            key = need("SUPABASE_SERVICE_ROLE_KEY")
         self.headers = {
             "apikey": key,
             "Authorization": "Bearer " + key,

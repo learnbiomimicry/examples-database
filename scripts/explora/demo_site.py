@@ -14,6 +14,12 @@ tables have public read rules.
 Usage: python scripts/explora/demo_site.py [--embed] [--artifact]   then open demo/index.html
   --embed     put photos inside the pages as small JPEGs (needed where outside images are blocked)
   --artifact  write index.html without its own html/head/body, for publishing as a Claude artifact
+
+Public site (explora.learnbiomimicry.com, its own Cloudflare Pages project):
+  python scripts/explora/demo_site.py --site [--out dist-explora]
+  Reads with the publishable key (published rows only, no secret needed), gives every
+  solution its own page at /solutions/<slug>/, and writes sitemap.xml, robots.txt and 404.html.
+  The Pages Function in functions/api/unlock.js comes along automatically (repo root).
 """
 import base64
 import hashlib
@@ -51,12 +57,35 @@ QUESTIONS = [
      ["adhes", "stick", "grip", "glue"]),
 ]
 
-e = html.escape
+def e(text, quote=True):
+    if text is None:
+        return ""
+    return html.escape(clean(text) if isinstance(text, str) else str(text), quote)
 
 
 EMBED = "--embed" in sys.argv
 BARE = "--artifact" in sys.argv
+SITE = "--site" in sys.argv
 CACHE = os.path.join(ROOT, "demo", ".img-cache")
+if SITE:
+    _out = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else "dist-explora"
+    OUT = os.path.join(ROOT, _out)
+
+SITE_URL = "https://explora.learnbiomimicry.com"
+SITE_NAME = "Explora, by Learn Biomimicry"
+FIELD_GUIDE = "https://www.learnbiomimicry.com/fieldguide"
+PILOT = CASE_BASE + "company-pilot/"
+# Page names in the local demo, and their clean URLs on the public site.
+ROUTES = {"index": ("index.html", "/"), "claude": ("claude.html", "/in-claude/")}
+
+
+def link(key, up=""):
+    return ROUTES[key][1] if SITE else up + ROUTES[key][0]
+
+
+def clean(text):
+    """Site copy never uses the em dash; some case study summaries do."""
+    return (text or "").replace(" — ", ", ").replace("—", ", ")
 
 
 def img(raw, width=480):
@@ -212,7 +241,7 @@ GATE_HTML = """
 <label class="tick"><input id="g-ok" type="checkbox" required><span>Yes, email me the eBook and biomimicry news from Learn Biomimicry. Unsubscribe any time.</span></label>
 <button type="submit" id="g-go">Unlock every solution</button>
 <p class="err" id="g-err" role="alert"></p>
-<p class="small">Already joined? Enter the same email to get straight back in.<br><a href="%(up)sindex.html">Back to all solutions</a></p>
+<p class="small">Already joined? Enter the same email to get straight back in.<br><a href="%(home)s">Back to all solutions</a></p>
 </form></div>
 <script>
 (()=>{const N=%(n)d,URL=%(url)s,K="explora_viewed",M="explora_member";
@@ -220,7 +249,9 @@ const get=k=>{try{return localStorage.getItem(k)}catch(_){return null}},set=(k,v
 const gate=document.getElementById("gate"),$=id=>document.getElementById(id);
 const slug=()=>{const s=document.getElementById("sol");return s?s.dataset.slug:decodeURIComponent(location.hash.slice(1))};
 let seen=[];try{seen=JSON.parse(get(K)||"[]")}catch(_){}
-function check(){const s=slug();if(!s||get(M))return;
+// lb_access is the two-year cookie set by /api/unlock on any *.learnbiomimicry.com site.
+const member=()=>get(M)||/(^|; )lb_access=1/.test(document.cookie);
+function check(){const s=slug();if(!s||member())return;
  if(!seen.includes(s)){if(seen.length>=N){open();return}seen.push(s);set(K,JSON.stringify(seen))}}
 function open(){gate.classList.add("open");document.body.style.overflow="hidden";setTimeout(()=>$("g-name").focus(),50)}
 function close(){gate.classList.remove("open");document.body.style.overflow=""}
@@ -234,7 +265,7 @@ $("gate-form").addEventListener("submit",async ev=>{ev.preventDefault();const er
  go.disabled=true;go.textContent="Unlocking...";
  try{const r=await fetch(URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||"Something went wrong, please try again.");
-  set(M,"1");close();}
+  set(M,"1");%(unlock)sclose();}
  catch(e){err.textContent=e.message.startsWith("Please")?e.message:"We could not reach the server. Please try again in a moment.";go.disabled=false;go.textContent="Unlock every solution"}});
 addEventListener("hashchange",check);check();})();
 </script>"""
@@ -242,7 +273,10 @@ addEventListener("hashchange",check);check();})();
 
 def gate(up=""):
     opts = "".join('<option value="%s">%s</option>' % (k, e(v)) for k, v in INTEREST_OPTIONS)
-    return "<style>%s</style>%s" % (GATE_CSS, GATE_HTML % {"n": FREE_VIEWS, "url": json.dumps(SIGNUP_URL), "opts": opts, "up": up})
+    # On the public site, also set the shared cookie so one sign-up unlocks examples.learnbiomimicry.com too.
+    unlock = 'fetch("/api/unlock",{method:"POST"}).catch(()=>{});' if SITE else ""
+    return "<style>%s</style>%s" % (GATE_CSS, GATE_HTML % {"n": FREE_VIEWS, "url": json.dumps(SIGNUP_URL), "opts": opts,
+                                                           "home": link("index", up), "unlock": unlock})
 
 
 def logo_src():
@@ -250,7 +284,39 @@ def logo_src():
         return "data:image/png;base64," + base64.b64encode(f.read()).decode()
 
 
-def page(title, body, depth=0, on="", bare=False):
+def site_page(title, body, path, description, on=""):
+    """A public page: real title, description, canonical and Open Graph tags, no demo labels."""
+    canonical = SITE_URL + path
+    nav = '<a href="/" class="%s">Nature\'s Solutions</a><a href="/in-claude/" class="%s">In Claude</a><a href="%s">Case studies</a>' % (
+        "on" if on == "m" else "", "on" if on == "c" else "", CASE_BASE)
+    full = title if title == SITE_NAME else "%s | %s" % (title, SITE_NAME)
+    return """<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>%s</title><meta name="description" content="%s"><link rel="canonical" href="%s">
+<meta property="og:type" content="website"><meta property="og:site_name" content="%s"><meta property="og:title" content="%s"><meta property="og:description" content="%s"><meta property="og:url" content="%s">
+<link rel="icon" href="/favicon.ico" sizes="any">%s<style>%s</style></head><body>
+<header class="top"><div class="wrap"><a class="brand" href="/"><img src="/logo.png" alt="Learn Biomimicry" width="121" height="30"><span class="prod">Explora</span></a>
+<nav class="main">%s</nav></div></header>
+%s
+<footer class="foot"><div class="wrap"><p><b>Explora, by Learn Biomimicry.</b> Nature's solutions, searchable by people and AI.</p>
+<p style="margin-top:8px"><a href="%s">Case studies</a> · <a href="%s">Free Field Guide to Biomimicry</a> · <a href="%s">Company pilot</a> · <a href="https://www.learnbiomimicry.com">learnbiomimicry.com</a></p>
+<p style="margin-top:8px">Shared under CC BY-NC 4.0. Paper evidence and function names adapted from NASA PeTaL (public domain), credit NASA.</p></div></footer>
+</body></html>""" % (e(full), e(description[:300]), e(canonical), e(SITE_NAME), e(full), e(description[:300]), e(canonical),
+                     FONTS, CSS, nav, body, CASE_BASE, FIELD_GUIDE, PILOT)
+
+
+def cta_panel():
+    """The two calls to action on every page: Field Guide for learners, company pilot for R&D teams."""
+    return ('<div class="panel"><p class="overline">Learn the method</p><h3>Free: the Field Guide to Biomimicry</h3>'
+            '<p style="font-size:14px;margin-bottom:12px">The eBook and 7-day email course that teach you to find and use strategies like this one.</p>'
+            '<a class="btn" href="%s">Get the Field Guide</a></div>'
+            '<div class="panel"><p class="overline">For R&amp;D teams</p><h3>A stuck problem? Run a company pilot</h3>'
+            '<p style="font-size:14px;margin-bottom:12px">Bring us one challenge. In four weeks a mentor takes your team from problem to nature-inspired concepts and a spec you can test.</p>'
+            '<a class="btn line" href="%s">See the company pilot</a></div>') % (FIELD_GUIDE, PILOT)
+
+
+def page(title, body, depth=0, on="", bare=False, path="/", description=""):
+    if SITE:
+        return site_page(title, body, path, description or "Nature's solutions from Explora, by Learn Biomimicry.", on)
     up = "../" * depth
     doc = """<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>%s | Explora demo</title><meta name="claude:viewport-fit-sides" content="cover">%s<style>%s</style></head><body>
@@ -276,9 +342,13 @@ def conf_pill(level):
 
 
 def load():
-    db = Supabase()
+    db = Supabase(public=SITE)
     cases = {c["id"]: c for c in db.select("biomimicry-examples", {
         "select": "id,slug,title,company,published,banner_image1_url,summary"})}
+    if SITE:
+        # Row level security already hides unpublished solutions from the public key, but the
+        # examples table is readable in full, so keep only published case studies here.
+        cases = {k: c for k, c in cases.items() if c.get("published")}
     enr = db.select("case_study_enrichment", {"select": "*"})
     mechs = {m["id"]: m for m in db.select("mechanisms", {"select": "*"})}
     funcs = {f["id"]: f for f in db.select("functions", {"select": "id,slug,name,parent_id"})}
@@ -291,6 +361,8 @@ def load():
     for r in db.select("mechanism_evidence", {"select": "mechanism_id,match_reason,evidence(doi,title,doi_check)"}):
         me.setdefault(r["mechanism_id"], []).append(r)
     items = []
+    if SITE:
+        mechs = {k: m for k, m in mechs.items() if m.get("published")}
     for m in mechs.values():
         if m.get("origin") != "paper":
             continue
@@ -339,7 +411,10 @@ def org_line(it):
 
 
 def href(it):
-    """Proven solutions get a page each; research ones share research.html (the artifact host caps file counts)."""
+    """On the public site every solution has its own page. In the demo, research ones share
+    research.html, because the artifact host caps file counts."""
+    if SITE:
+        return "/solutions/%s/" % it["m"]["slug"]
     return ("m/%s.html" if it["tier"] == "Proven" else "research.html#%s") % it["m"]["slug"]
 
 
@@ -381,7 +456,7 @@ def mechanism_page(it, funcs, up="../", bare_body=False):
             doi_link(ev), "" if confirmed else " We could not confirm this paper&#39;s DOI yet, so there is no link.")
     body = """
 <div class="page-hero" style="background-image:url('%s')"><div class="wrap">
-<a class="crumb" href="%sindex.html">All Nature's Solutions</a>
+<a class="crumb" href="%s">All Nature's Solutions</a>
 <p class="overline" style="color:var(--aqua)">Nature's Solution</p><h1>%s</h1><p class="lede">%s</p>
 <div class="meta" style="margin-top:16px">%s%s</div>
 </div></div>
@@ -398,18 +473,33 @@ def mechanism_page(it, funcs, up="../", bare_body=False):
 <div class="panel"><p class="overline">Who in nature</p><h3>%s</h3><p style="font-size:14px" class="muted">%s</p></div>
 <div class="panel"><p class="overline">Life-friendly score</p><div class="score">%s<small> / 30</small></div>%s</div>
 <div class="panel"><p class="overline">What it does</p><h3>Functions</h3>%s</div>
-<div class="panel"><p class="overline">Who owns what? Is it open?</p><h3>Patents and opportunity</h3><div class="soon">Coming on day 3: key patents, their status (active, expired, lapsed) and an opportunity label: Open, Free to use or Proven.</div></div>
-<div class="panel"><p class="overline">Learn the method</p><h3>Apply this yourself</h3><p style="font-size:14px;margin-bottom:12px">The Biomimicry short courses teach you to find and use strategies like this one.</p><a class="btn line" href="https://www.learnbiomimicry.com/short-courses">Biomimicry short courses</a></div>
+%s
 </aside></div>""" % (
-        e(pic), up, e(m["name"]), e(m.get("summary") or ""), conf_pill(x.get("confidence_level")), tier_pill(it, True),
+        e(pic), link("index", up), e(m["name"]), e(m.get("summary") or ""), conf_pill(x.get("confidence_level")), tier_pill(it, True),
         visual, steps, CONF_COLOUR.get(x.get("confidence_level"), "#333"), e(x.get("confidence_level") or "-"),
         x.get("confidence_points") or 0, reasons, papers, story,
         org_line(it) or "Not one single organism", e(o.get("habitat") or ""),
-        num(x.get("lf_total")), bars, fn)
+        num(x.get("lf_total")), bars, fn, side_extra())
     if bare_body:
         return body
     body = '<div id="sol" data-slug="%s" hidden></div>%s%s' % (e(m["slug"]), body, gate(up))
-    return page(m["name"], body, depth=1, on="m")
+    who = org_line_text(it)
+    desc = "%s%s %s" % (m["name"], " (%s)" % who if who else "", m.get("summary") or "")
+    return page(m["name"], body, depth=1, on="m", path=href(it), description=clean(desc))
+
+
+def org_line_text(it):
+    o = it["orgs"][0] if it["orgs"] else None
+    return (o.get("common_name") or o.get("scientific_name") or "") if o else ""
+
+
+def side_extra():
+    """Demo: patents preview and the short courses. Public site: the two calls to action
+    (the patent layer is paused in the 24 Nov 2026 strategy)."""
+    if SITE:
+        return cta_panel()
+    return ('<div class="panel"><p class="overline">Who owns what? Is it open?</p><h3>Patents and opportunity</h3><div class="soon">Coming on day 3: key patents, their status (active, expired, lapsed) and an opportunity label: Open, Free to use or Proven.</div></div>'
+            '<div class="panel"><p class="overline">Learn the method</p><h3>Apply this yourself</h3><p style="font-size:14px;margin-bottom:12px">The Biomimicry short courses teach you to find and use strategies like this one.</p><a class="btn line" href="https://www.learnbiomimicry.com/short-courses">Biomimicry short courses</a></div>')
 
 
 def research_page(items, funcs):
@@ -449,8 +539,8 @@ def index_page(items):
 <div class="chips"><button class="chip tier on" data-t="">Everything</button><button class="chip tier" data-t="Proven">Proven in a product (%d)</button><button class="chip tier" data-t="Researched">From research (%d)</button></div>
 <div class="chips"><button class="chip cf on" data-c="">Any confidence</button><button class="chip cf" data-c="High">High confidence (%d)</button><button class="chip cf" data-c="Medium">Medium (%d)</button><button class="chip cf" data-c="Low">Low (%d)</button></div>
 </div></div>
-<div class="wrap"><div class="bar"><p class="overline" id="count"></p><a class="btn line" href="claude.html">See it in Claude</a></div>
-<div class="grid" id="grid">%s</div></div>
+<div class="wrap"><div class="bar"><p class="overline" id="count"></p><a class="btn line" href="%s">See it in Claude</a></div>
+<div class="grid" id="grid">%s</div>%s</div>
 <script>
 const T=%s;const cards=[...document.querySelectorAll('.card')];let conf='',tier='';
 function run(){const q=document.getElementById('q').value.toLowerCase().trim().split(/\\s+/).filter(Boolean);let n=0;
@@ -460,8 +550,12 @@ document.getElementById('q').addEventListener('input',run);
 document.querySelectorAll('.chip.cf').forEach(b=>b.onclick=()=>{document.querySelectorAll('.chip.cf').forEach(x=>x.classList.remove('on'));b.classList.add('on');conf=b.dataset.c;run()});
 document.querySelectorAll('.chip.tier').forEach(b=>b.onclick=()=>{document.querySelectorAll('.chip.tier').forEach(x=>x.classList.remove('on'));b.classList.add('on');tier=b.dataset.t;run()});
 run();
-</script>""" % (len(items), tiers["Proven"], tiers["Researched"], counts["High"], counts["Medium"], counts["Low"], "".join(cards), json.dumps(data))
-    return page("Nature's Solutions", body, bare=BARE)
+</script>""" % (len(items), tiers["Proven"], tiers["Researched"], counts["High"], counts["Medium"], counts["Low"], link("claude"), "".join(cards),
+         ('<div class="side" style="padding-bottom:60px;display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">%s</div>' % cta_panel()) if SITE else "",
+         json.dumps(data))
+    desc = ("%d of nature's solutions, each with how it works, the organism behind it, how sure we are and real examples. "
+            "Free to read, from Explora, by Learn Biomimicry." % len(items))
+    return page(SITE_NAME if SITE else "Nature's Solutions", body, bare=BARE, path="/", description=desc)
 
 
 def claude_page(items):
@@ -491,16 +585,49 @@ def claude_page(items):
                 example, href(it))
         blocks.append('<div class="q"><div>%s</div></div><div class="a"><p class="who">Claude, using the Learn Biomimicry connector</p>'
                       '<p>Here are the strongest matches in Explora, best evidence first:</p><ol>%s</ol>'
-                      '<p class="cite">Source: Explora by Learn Biomimicry. Want to apply this? The Biomimicry Masterclass teaches the method, or book a Sprint for your team.</p></div>'
-                      % (e(question), lis))
+                      '<p class="cite">Source: Explora by Learn Biomimicry. Want to apply this? The Biomimicry Masterclass teaches the method, or %s.</p></div>'
+                      % (e(question), lis, ('<a href="%s">run a company pilot with your team</a>' % PILOT) if SITE else "book a Sprint for your team"))
     body = ('<div class="wrap chat"><p class="overline">Mock-up</p><h1 style="color:var(--deep);font-size:32px;margin:6px 0 8px">How it reads inside Claude</h1>'
             '<p class="muted">This shows the shape of an answer the connector would give, built from the same records. '
             'The matching here is simple keyword and function matching; the real connector will let Claude choose.</p>%s</div>') % "".join(blocks)
-    return page("In Claude", body, on="c")
+    return page("Biomimicry in Claude", body, on="c", path="/in-claude/",
+                description="How Claude answers biomimicry questions from Explora's checked nature's solutions, with the organism, the evidence and real examples.")
+
+
+def write(path, text):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+
+
+def build_site(items, funcs):
+    """The public site: clean URLs, one page per solution, sitemap and robots."""
+    import shutil
+    if os.path.isdir(OUT):
+        shutil.rmtree(OUT)
+    urls = ["/", "/in-claude/"]
+    for it in items:
+        write(os.path.join(OUT, "solutions", it["m"]["slug"], "index.html"), mechanism_page(it, funcs))
+        urls.append(href(it))
+    write(os.path.join(OUT, "index.html"), index_page(items))
+    write(os.path.join(OUT, "in-claude", "index.html"), claude_page(items))
+    write(os.path.join(OUT, "404.html"), page("Page not found", '<div class="wrap" style="padding-block:60px"><h1 style="color:var(--deep)">We could not find that page</h1>'
+                                              '<p style="margin-top:12px"><a class="btn" href="/">See all nature&#39;s solutions</a></p></div>', path="/404.html"))
+    today = time.strftime("%Y-%m-%d")
+    write(os.path.join(OUT, "sitemap.xml"), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n%s\n</urlset>\n' % "\n".join(
+        "<url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SITE_URL, u, today) for u in urls))
+    write(os.path.join(OUT, "robots.txt"), "User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: %s/sitemap.xml\n" % SITE_URL)
+    shutil.copy(LOGO, os.path.join(OUT, "logo.png"))
+    fav = os.path.join(ROOT, "public", "favicon.ico")
+    if os.path.exists(fav):
+        shutil.copy(fav, os.path.join(OUT, "favicon.ico"))
+    print("wrote site with", len(items), "solution pages to", OUT)
 
 
 def main():
     items, funcs = load()
+    if SITE:
+        return build_site(items, funcs)
     os.makedirs(os.path.join(OUT, "m"), exist_ok=True)
     for it in items:
         if it["tier"] == "Proven":

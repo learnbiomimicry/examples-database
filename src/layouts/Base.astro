@@ -243,6 +243,6 @@ const path = Astro.url.pathname;
     if (!a || typeof window.gtag !== "function") return;
     let dest = a.getAttribute("href") || "";
     try { const u = new URL(dest, location.href); dest = u.protocol === "mailto:" ? "email" : u.hostname + u.pathname; } catch {}
-    window.gtag("event", "cta_click", { cta_location: a.dataset.track, cta_destination: dest, cta_text: (a.textContent || "").trim().slice(0, 80) });
+    window.gtag("event", "cta_click", { cta_location: a.dataset.track, cta_destination: dest, cta_text: (a.innerText || a.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80) });
   });
 </script>

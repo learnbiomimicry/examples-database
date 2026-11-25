@@ -1,0 +1,36 @@
+---
+// Thin bar across the top of every page for the free live demo. Visitors can close it
+// (remembered in their browser), and it disappears on its own once the demo has ended.
+import { EVENTS } from "../lib/config.js";
+import { win } from "../lib/timely.js";
+const d = EVENTS.demo;
+---
+<div class="ann" data-ann {...win(null, d.end)}>
+  <p class="ann-text">
+    <span><b>Free live demo:</b> {d.name}, {d.day.replace(/ \d{4}$/, "")}.</span>
+    <a href={d.register} data-track="announcement-bar">Save your seat</a>
+  </p>
+  <button type="button" class="ann-x" data-ann-close aria-label="Close this message">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+</div>
+
+<script>
+  const KEY = "lb_ann_demo_closed";
+  const bar = document.querySelector("[data-ann]");
+  try { if (localStorage.getItem(KEY) === "1") bar?.remove(); } catch {}
+  bar?.querySelector("[data-ann-close]")?.addEventListener("click", () => {
+    try { localStorage.setItem(KEY, "1"); } catch {}
+    bar.remove();
+  });
+</script>
+
+<style>
+  .ann { position: relative; background: var(--lb-deep); color: #fff; font-size: 13px; line-height: 1.4; padding: 9px 44px; text-align: center; }
+  .ann-text { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; }
+  .ann-text b { font-weight: 600; }
+  .ann-text a { color: var(--lb-amber); font-weight: 600; text-underline-offset: 3px; }
+  .ann-x { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: rgba(255,255,255,0.75); padding: 6px; display: grid; place-items: center; }
+  .ann-x:hover { color: #fff; }
+  @media (max-width: 640px) { .ann { padding: 8px 40px 8px 16px; text-align: left; } .ann-text { justify-content: flex-start; } }
+</style>

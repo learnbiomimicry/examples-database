@@ -1,0 +1,68 @@
+---
+// Site-wide band above the footer: Learn Biomimicry's three core offerings.
+// Photos live in public/images/programmes/ (800 x 500, about 80 to 130 KB each).
+// To change a photo, replace the file with the same name.
+import { OFFERS } from "../lib/config.js";
+import { win, steps } from "../lib/timely.js";
+const cohorts = steps(OFFERS.practitioner.cohorts);
+const deadlines = steps(OFFERS.educator.deadlines);
+---
+<section class="pband" aria-labelledby="pband-title">
+  <div class="container">
+    <p class="pband-over">Learn with Learn Biomimicry</p>
+    <h2 id="pband-title" class="pband-title">Go from inspired to practising</h2>
+    <div class="pband-grid">
+      <article class="pcard c1">
+        <img src="/images/programmes/programme-short-courses.jpg" alt="Looking down on a dense green forest canopy" width="800" height="500" loading="lazy" decoding="async" />
+        <div class="pcard-body">
+          <h3>{OFFERS.shortCourses.name}</h3>
+          <p>Learn the foundations at your own pace. Start anytime.</p>
+          <a class="pcard-btn" href={OFFERS.shortCourses.href} data-track="programmes-band-short-courses">Explore the short courses</a>
+        </div>
+      </article>
+      <article class="pcard c2">
+        <img src="/images/programmes/programme-practitioner.jpg" alt="Water droplets beading on a lotus leaf" width="800" height="500" loading="lazy" decoding="async" />
+        <div class="pcard-body">
+          <h3>{OFFERS.practitioner.name}</h3>
+          <p>Apply biomimicry to a real challenge from your work, with mentors.
+            {cohorts.map((s) => s.item
+              ? <span {...win(s.from, s.until)}> Next cohort starts {s.item.starts}.</span>
+              : <span {...win(s.from, s.until)}> Applications are open for the next cohort.</span>)}
+          </p>
+          <a class="pcard-btn" href={OFFERS.practitioner.href} data-track="programmes-band-practitioner">Join the Practitioner Programme</a>
+        </div>
+      </article>
+      <article class="pcard c3">
+        <img src="/images/programmes/programme-educator.jpg" alt="Three blue morpho butterflies" width="800" height="500" loading="lazy" decoding="async" />
+        <div class="pcard-body">
+          <h3>{OFFERS.educator.name}</h3>
+          <p>Teach biomimicry with confidence and bring it into your classroom or organisation.
+            {deadlines.map((s) => s.item
+              ? <span {...win(s.from, s.until)}> Applications close {s.item.closes}.</span>
+              : <span {...win(s.from, s.until)}> Applications are open for the next cohort.</span>)}
+          </p>
+          <a class="pcard-btn" href={OFFERS.educator.href} data-track="programmes-band-educator">Join the Educator Programme</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pband { background: linear-gradient(135deg, var(--lb-deep) 0%, #0d5a6e 45%, var(--lb-moss) 100%); color: #fff; padding: 72px 0 80px; }
+  .pband-over { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--lb-aqua); }
+  .pband-title { font-size: clamp(26px, 3.4vw, 36px); margin: 8px 0 32px; color: #fff; }
+  .pband-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .pcard { background: #fff; color: var(--foreground); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; border-top: 5px solid var(--accent); box-shadow: 0 20px 50px -24px rgba(0,0,0,0.5); transition: transform .35s cubic-bezier(0.34,1.56,0.64,1); }
+  .pcard:hover { transform: translateY(-4px); }
+  .pcard.c1 { --accent: var(--lb-amber); }
+  .pcard.c2 { --accent: var(--lb-coral); }
+  .pcard.c3 { --accent: var(--lb-aqua); }
+  .pcard img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--surface); }
+  .pcard-body { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .pcard h3 { font-size: 20px; color: var(--lb-deep); }
+  .pcard p { font-size: 15px; line-height: 1.6; color: rgba(35,31,32,0.78); flex: 1; }
+  .pcard-btn { align-self: flex-start; margin-top: 6px; border: 1.5px solid var(--lb-deep); color: var(--lb-deep); border-radius: 999px; padding: 9px 18px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background .2s, color .2s; }
+  .pcard-btn:hover { background: var(--lb-deep); color: #fff; }
+  @media (max-width: 900px) { .pband-grid { grid-template-columns: 1fr; max-width: 560px; } .pband { padding: 56px 0 64px; } }
+</style>

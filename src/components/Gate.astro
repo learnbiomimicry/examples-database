@@ -42,7 +42,7 @@ const { slug, total } = Astro.props;
 </div>
 
 <script>
-  import { GATE } from "../lib/config.js";
+  import { GATE, BETA } from "../lib/config.js";
 
   const gate = document.querySelector("[data-gate]");
   const SEEN = "lb_seen_cases";
@@ -97,6 +97,8 @@ const { slug, total } = Astro.props;
     url.searchParams.delete("access");
     history.replaceState(null, "", url.pathname + url.search + url.hash);
   }
+  // Newsletter readers: ?from=livingloop unlocks this device for good (also set in Base.astro).
+  if (url.searchParams.get(BETA.bypassParam[0]) === BETA.bypassParam[1]) markAccess();
 
   if (gate && main && !hasAccess()) {
     const slug = gate.dataset.slug;
@@ -173,7 +175,7 @@ const { slug, total } = Astro.props;
   @keyframes gate-card-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } }
   @media (prefers-reduced-motion: reduce) { .gate, .gate-card { animation: none; } }
   :global(html.gate-open) { overflow: hidden; }
-  .gate-over { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--lb-web); }
+  .gate-over { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.03em; color: var(--lb-web); }
   .gate-title { font-family: var(--font-head); font-weight: 900; font-size: 26px; line-height: 1.15; color: var(--lb-deep); margin: 8px 0 10px; }
   .gate-text { font-size: 15px; line-height: 1.6; color: rgba(35,31,32,0.78); margin-bottom: 20px; }
   .gate-text b { font-weight: 600; color: var(--lb-deep); }

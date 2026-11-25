@@ -1,0 +1,4 @@
+{
+  "_readme": "Past Practitioner projects shown on case study pages as 'A Practitioner who started here'. Key each project by the industry slug used on the site (for example product-design, architecture, materials, textiles). A case study shows the card only when its industry has an entry here. Fields: title, practitioner, image (full URL or /images/practitioners/file.jpg), line (one sentence), href.",
+  "projects": {}
+}

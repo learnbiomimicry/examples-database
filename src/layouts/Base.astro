@@ -1,5 +1,8 @@
 ---
-import { SITE, CTA } from "../lib/config.js";
+import { SITE, CTA, OFFERS, EVENTS, TOOLS, BETA, ANALYTICS } from "../lib/config.js";
+import { win } from "../lib/timely.js";
+import AnnouncementBar from "../components/AnnouncementBar.astro";
+import ProgrammesBand from "../components/ProgrammesBand.astro";
 const { title, description, image, jsonLd, noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const fullTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} | ${SITE.brand}`;
@@ -29,39 +32,53 @@ const path = Astro.url.pathname;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@1,300;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet" />
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <script is:inline>try{if(localStorage.getItem("lb_ann_demo_closed")==="1")document.documentElement.classList.add("ann-closed")}catch(e){}</script>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${ANALYTICS.ga4}`}></script>
+    <script is:inline define:vars={{ ga4: ANALYTICS.ga4 }}>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag("js",new Date());gtag("config",ga4);</script>
   </head>
   <body>
+    <AnnouncementBar />
     <header class="site-header">
       <div class="container header-row">
         <a class="wordmark" href="/" aria-label="Learn Biomimicry Examples, home">
           <img class="wm-logo" src="/images/logo.png" alt="Learn Biomimicry" width="149" height="32" /><span class="wm-tag">Examples</span>
         </a>
+        <span class="beta" title="This site is new. Tell us what you think.">Beta</span>
         <nav aria-label="Main">
           <a href="/" aria-current={path === "/" ? "page" : undefined}>All examples</a>
           <a href="/level/form/" aria-current={path.startsWith("/level/form") ? "page" : undefined}>Form</a>
           <a href="/level/process/" aria-current={path.startsWith("/level/process") ? "page" : undefined}>Process</a>
           <a href="/level/system/" aria-current={path.startsWith("/level/system") ? "page" : undefined}>System</a>
-          <a class="nav-cta" href={CTA.fieldGuide.href}>Free Field Guide</a>
+          <a class="nav-cta" href={CTA.fieldGuide.href} data-track="nav-field-guide">Free Field Guide</a>
         </nav>
       </div>
     </header>
     <slot />
+    <ProgrammesBand />
     <footer class="site-footer">
       <div class="container footer-grid">
         <div>
-          <a class="wordmark" href="https://www.learnbiomimicry.com"><img class="wm-logo" src="/images/logo-white.png" alt="Learn Biomimicry" width="121" height="32" /></a>
+          <a class="wordmark" href={SITE.home}><img class="wm-logo" src="/images/logo-white.png" alt="Learn Biomimicry" width="121" height="32" /></a>
           <p class="footer-sub">Making biomimicry accessible, affordable and applicable.</p>
+          <p class="footer-beta">This site is in beta. <a href={BETA.feedback} data-track="footer-feedback">Spot something off? Tell us</a></p>
         </div>
         <div>
           <p class="overline">Learn</p>
-          <p><a href={CTA.fieldGuide.href}>Field Guide to Biomimicry</a></p>
-          <p><a href={CTA.courses.href}>Biomimicry short courses</a></p>
-          <p><a href={SITE.home}>learnbiomimicry.com</a></p>
+          <p><a href={OFFERS.shortCourses.href} data-track="footer-short-courses">Short Course Set</a></p>
+          <p><a href={OFFERS.practitioner.href} data-track="footer-practitioner">Practitioner Programme</a></p>
+          <p><a href={OFFERS.educator.href} data-track="footer-educator">Educator Programme</a></p>
+          <p><a href={OFFERS.fieldGuide.href} data-track="footer-field-guide">Field Guide to Biomimicry</a></p>
         </div>
         <div>
-          <p class="overline">For R&amp;D teams</p>
-          <p><a href={CTA.opportunityMap.href}>Biomimicry Opportunity Map</a></p>
-          <p><a href="https://explora.network">Explora Team Sprints</a></p>
+          <p class="overline">Events</p>
+          <p {...win(null, EVENTS.demo.end)}><a href={EVENTS.demo.register} data-track="footer-demo">{EVENTS.demo.name} ({EVENTS.demo.short}, free)</a></p>
+          <p {...win(null, EVENTS.confluence.end)}><a href={EVENTS.confluence.href} data-track="footer-confluence">{EVENTS.confluence.name} ({EVENTS.confluence.when})</a></p>
+          <p><a href={EVENTS.all} data-track="footer-all-events">All events</a></p>
+        </div>
+        <div>
+          <p class="overline">Tools</p>
+          <p><a href={TOOLS.explora.href} data-track="footer-explora">{TOOLS.explora.name}</a></p>
+          <p><a href="/">Biomimicry Examples Database</a></p>
         </div>
       </div>
     </footer>
@@ -121,7 +138,7 @@ const path = Astro.url.pathname;
   @media (min-width: 768px) { .container { padding: 0 32px; } }
   [hidden] { display: none !important; }
 
-  .overline { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--primary); font-weight: 400; }
+  .overline { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.03em; color: var(--primary); font-weight: 400; }
   .subtitle, .italic-sub { font-family: var(--font-sub); font-style: italic; font-weight: 300; }
   .muted { color: var(--muted-foreground); }
   .rule { height: 1px; background: var(--border); }
@@ -131,24 +148,29 @@ const path = Astro.url.pathname;
   .header-row { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .wm-logo { display: block; height: 32px; width: auto; }
   .wordmark { display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--lb-charcoal); line-height: 1; white-space: nowrap; }
-  .wm-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary); margin-left: 8px; padding: 3px 8px; border: 1px solid rgba(10,69,100,0.25); border-radius: 999px; }
+  .wm-tag { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.03em; color: var(--primary); margin-left: 8px; padding: 3px 8px; border: 1px solid rgba(10,69,100,0.25); border-radius: 999px; }
+  .beta { margin-right: auto; margin-left: -6px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; color: #fff; background: var(--lb-coral); padding: 2px 8px; border-radius: 999px; line-height: 1.5; }
   nav { display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 400; }
   nav a { text-decoration: none; color: var(--muted-foreground); transition: color .2s; }
   nav a:hover, nav a[aria-current="page"] { color: var(--primary); }
-  .nav-cta { color: #fff !important; background: var(--action); padding: 7px 14px; border-radius: 999px; font-weight: 500; }
-  .nav-cta:hover { filter: brightness(0.95); }
+  .nav-cta { color: var(--primary) !important; border: 1.5px solid rgba(10,69,100,0.3); padding: 6px 14px; border-radius: 999px; font-weight: 500; }
+  .nav-cta:hover { border-color: var(--primary); }
   @media (max-width: 860px) { nav a:not(.nav-cta) { display: none; } .wm-tag { display: none; } }
 
   /* Footer */
   .site-footer { background: var(--lb-deep); color: rgba(255,255,255,0.8); padding: 56px 0; margin-top: 0; font-size: 14px; }
-  .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
+  .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; }
+  .footer-beta { margin-top: 18px !important; font-size: 13px; color: rgba(255,255,255,0.65); }
+  .footer-beta a { text-decoration: underline !important; text-underline-offset: 3px; }
   .site-footer p { margin: 6px 0; }
   .site-footer a { color: rgba(255,255,255,0.85); text-decoration: none; }
   .site-footer a:hover { color: #fff; text-decoration: underline; }
   .site-footer .overline { color: var(--lb-aqua); }
   .wordmark-light { color: #fff; }
   .footer-sub { font-family: var(--font-sub); font-style: italic; color: rgba(255,255,255,0.65); }
-  @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } .footer-grid > :first-child { grid-column: 1 / -1; } }
+  @media (max-width: 520px) { .footer-grid { grid-template-columns: 1fr; } }
+  .ann-closed .ann { display: none !important; }
 
   /* Shared controls */
   .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,0.7); color: var(--foreground); font-family: var(--font-sans); font-weight: 300; font-size: 14px; transition: all .3s var(--ease); white-space: nowrap; text-decoration: none; }
@@ -179,9 +201,48 @@ const path = Astro.url.pathname;
 </style>
 
 <script>
+  import { applyWindows } from "../lib/timely.js";
+  import { BETA, GATE } from "../lib/config.js";
+
   // Fade sections up as they scroll into view.
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
   }, { rootMargin: "0px 0px -10% 0px" });
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+  // Date-aware messages: re-check for the visitor's date (or ?now= when testing).
+  applyWindows();
+
+  // Show event times in the visitor's own time zone (South Africa time stays underneath).
+  document.querySelectorAll("[data-local-time]").forEach((el) => {
+    try {
+      const start = new Date(el.dataset.start), end = new Date(el.dataset.end);
+      const t = (d, timeZone) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone });
+      if (t(start) === t(start, "Africa/Johannesburg")) return; // already South Africa time
+      const day = start.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+      const sameDay = day === start.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Johannesburg" });
+      el.textContent = `${sameDay ? "" : day + ", "}${t(start)} to ${t(end)} your time`;
+      el.nextElementSibling?.removeAttribute("hidden");
+    } catch {}
+  });
+
+  // Newsletter readers (?from=livingloop) never see the email limit on case studies.
+  try {
+    const [k, v] = BETA.bypassParam;
+    if (new URLSearchParams(location.search).get(k) === v) {
+      localStorage.setItem("lb_access", "1");
+      localStorage.setItem("lb_access_via", v);
+      fetch(GATE.cookieUrl, { credentials: "same-origin" }).catch(() => {});
+    }
+  } catch {}
+
+  // Analytics: every link with data-track sends a cta_click event, labelled by
+  // where it sits on the page (cta_location) and where it goes (cta_destination).
+  document.addEventListener("click", (ev) => {
+    const a = ev.target instanceof Element ? ev.target.closest("[data-track]") : null;
+    if (!a || typeof window.gtag !== "function") return;
+    let dest = a.getAttribute("href") || "";
+    try { const u = new URL(dest, location.href); dest = u.protocol === "mailto:" ? "email" : u.hostname + u.pathname; } catch {}
+    window.gtag("event", "cta_click", { cta_location: a.dataset.track, cta_destination: dest, cta_text: (a.textContent || "").trim().slice(0, 80) });
+  });
 </script>

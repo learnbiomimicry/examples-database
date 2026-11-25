@@ -2,6 +2,8 @@
 // Landing pages such as /industry/materials/ or /level/form/, styled like Explora's category pages.
 import Base from "../../layouts/Base.astro";
 import Card from "../../components/Card.astro";
+import { OFFERS } from "../../lib/config.js";
+import { win, steps } from "../../lib/timely.js";
 import { getExamples, facetValues, facetUrl, FACETS } from "../../lib/data.js";
 import { SITE, CTA } from "../../lib/config.js";
 
@@ -69,12 +71,14 @@ const items = [...v.items].sort((a, b) => (b.rating?.score ?? -1) - (a.rating?.s
     <section class="f-close">
       <div class="container f-close-grid">
         <div>
-          <p class="overline f-close-over">For R&amp;D and product teams</p>
-          <h2>Find the problems worth solving in your own products</h2>
+          <p class="overline f-close-over">{OFFERS.practitioner.name}</p>
+          <h2>Bring a challenge from your work, and solve it the way nature would</h2>
         </div>
         <div class="f-close-actions">
-          <a class="f-btn" href={CTA.opportunityMap.href}>Map my opportunities</a>
-          <a class="f-link" href={CTA.fieldGuide.href}>Or start with the free Field Guide &rarr;</a>
+          <a class="f-btn" href={OFFERS.practitioner.href} data-track="filter-closing-practitioner">
+            {steps(OFFERS.practitioner.cohorts).map((c) => <span {...win(c.from, c.until)}>{c.item ? `Join the ${c.item.month} cohort` : "Join the next cohort"}</span>)}
+          </a>
+          <a class="f-link" href={OFFERS.shortCourses.href} data-track="filter-closing-short-courses">Or start with the Short Course Set &rarr;</a>
         </div>
       </div>
     </section>
@@ -85,7 +89,7 @@ const items = [...v.items].sort((a, b) => (b.rating?.score ?? -1) - (a.rating?.s
   .f-hero { position: relative; padding: 32px 0 48px; overflow: hidden; border-bottom: 1px solid var(--border); background: var(--surface); }
   .f-glow { position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 100%, rgba(135,186,217,0.35), transparent 60%); pointer-events: none; }
   .f-inner { position: relative; }
-  .crumb { display: inline-flex; gap: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); text-decoration: none; margin-bottom: 32px; }
+  .crumb { display: inline-flex; gap: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; color: var(--muted-foreground); text-decoration: none; margin-bottom: 32px; }
   .crumb:hover { color: var(--foreground); }
   .f-hero .overline { margin-bottom: 12px; }
   .f-hero h1 { font-size: clamp(2rem, 4.6vw, 3.2rem); margin-bottom: 16px; }

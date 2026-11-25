@@ -155,6 +155,8 @@ const path = Astro.url.pathname;
   nav a:hover, nav a[aria-current="page"] { color: var(--primary); }
   .nav-cta { color: var(--primary) !important; border: 1.5px solid rgba(10,69,100,0.3); padding: 6px 14px; border-radius: 999px; font-weight: 500; }
   .nav-cta:hover { border-color: var(--primary); }
+  .nav-cta { white-space: nowrap; }
+  @media (max-width: 420px) { .nav-cta { font-size: 13px; padding: 5px 11px; } .wm-logo { height: 28px; } }
   @media (max-width: 860px) { nav a:not(.nav-cta) { display: none; } .wm-tag { display: none; } }
 
   /* Footer */

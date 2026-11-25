@@ -58,11 +58,11 @@ const deadlines = steps(OFFERS.educator.deadlines);
   .pcard.c1 { --accent: var(--lb-amber); }
   .pcard.c2 { --accent: var(--lb-coral); }
   .pcard.c3 { --accent: var(--lb-aqua); }
-  .pcard img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--surface); }
+  .pcard img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; background: var(--surface); }
   .pcard-body { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
   .pcard h3 { font-size: 20px; color: var(--lb-deep); }
   .pcard p { font-size: 15px; line-height: 1.6; color: rgba(35,31,32,0.78); flex: 1; }
   .pcard-btn { align-self: flex-start; margin-top: 6px; border: 1.5px solid var(--lb-deep); color: var(--lb-deep); border-radius: 999px; padding: 9px 18px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background .2s, color .2s; }
   .pcard-btn:hover { background: var(--lb-deep); color: #fff; }
-  @media (max-width: 900px) { .pband-grid { grid-template-columns: 1fr; max-width: 560px; } .pband { padding: 56px 0 64px; } }
+  @media (max-width: 900px) { .pband-grid { grid-template-columns: 1fr; max-width: 560px; } .pband { padding: 56px 0 64px; } .pcard img { aspect-ratio: 16 / 9; } }
 </style>

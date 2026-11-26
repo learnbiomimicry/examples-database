@@ -1,6 +1,8 @@
 // Loads the examples once per build and shapes them for the pages.
 import { readFileSync } from "node:fs";
-import { SUPABASE } from "./config.js";
+import { SUPABASE, SITE } from "./config.js";
+import CREDITS_FILE from "../data/image-credits.json";
+const { _readme, ...CREDITS } = CREDITS_FILE;
 
 const FIELDS = [
   "slug", "title", "organism", "company", "location", "industry_id", "category_id",
@@ -68,7 +70,15 @@ function prompts(raw) {
 function image(raw) {
   if (!raw) return null;
   if (/^https?:\/\//.test(raw)) return raw;
+  // A site path such as /images/examples/x.jpg (files in public/) becomes a full address.
+  if (raw.startsWith("/")) return SITE.url + raw;
   return `${SUPABASE.imageBase}/${encodeURIComponent(raw)}`;
+}
+
+// Optional source link for a banner image (src/data/image-credits.json): the image links there and shows a credit.
+function link(raw) {
+  const v = String(raw ?? "").trim();
+  return /^https?:\/\//.test(v) ? { href: v, label: v.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") } : null;
 }
 
 export function paragraphs(text) {
@@ -100,6 +110,8 @@ export async function getExamples() {
       ...r,
       image: image(r.banner_image1_url),
       image2: image(r.banner_image2_url),
+      imageLink: link(CREDITS[r.slug]?.[0]),
+      image2Link: link(CREDITS[r.slug]?.[1]),
       prompts: prompts(r.design_prompts),
       rating: r.rating_score == null ? null : {
         score: r.rating_score,

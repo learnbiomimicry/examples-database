@@ -1,0 +1,4 @@
+{
+  "_readme": "Source links for case study banner images, keyed by case study slug: [link for image 1, link for image 2]. Each image links to its source and shows a small credit. Use null to skip one.",
+  "ecovative-design": ["https://ecovative.com/", "https://forager.bio/"]
+}

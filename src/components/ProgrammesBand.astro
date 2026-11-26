@@ -1,7 +1,8 @@
 ---
 // Site-wide band above the footer: Learn Biomimicry's three core offerings.
-// Photos live in public/images/programmes/ (800 x 500, about 80 to 130 KB each).
-// Photos from learnbiomimicry.com. To change one, replace the file with the same name.
+// Images live in public/images/programmes/ (800 x 450, 16:9, under 100 KB each).
+// They are the programme banners from learnbiomimicry.com, shown whole (text included).
+// To change one, replace the file with the same name, keeping the 16:9 shape.
 import { OFFERS } from "../lib/config.js";
 import { win, steps } from "../lib/timely.js";
 const cohorts = steps(OFFERS.practitioner.cohorts);
@@ -13,7 +14,7 @@ const deadlines = steps(OFFERS.educator.deadlines);
     <h2 id="pband-title" class="pband-title">Go from inspired to practising</h2>
     <div class="pband-grid">
       <article class="pcard c1">
-        <img src="/images/programmes/programme-short-courses.jpg" alt="A humpback whale swimming beneath the ocean surface" width="800" height="500" loading="lazy" decoding="async" />
+        <img src="/images/programmes/programme-short-courses.jpg" alt="Biomimicry Short Course: a lechwe antelope leaping through water. 5 hours per course, 2 to 6 weeks, self-paced online." width="800" height="450" loading="lazy" decoding="async" />
         <div class="pcard-body">
           <h3>{OFFERS.shortCourses.name}</h3>
           <p>Learn the foundations at your own pace. Start anytime.</p>
@@ -21,7 +22,7 @@ const deadlines = steps(OFFERS.educator.deadlines);
         </div>
       </article>
       <article class="pcard c2">
-        <img src="/images/programmes/programme-practitioner.jpg" alt="A leopard looking out from green forest" width="800" height="500" loading="lazy" decoding="async" />
+        <img src="/images/programmes/programme-practitioner.jpg" alt="Biomimicry Practitioner Programme: flamingos running across a red lake. 20 hours per month, 6 months part time, project based." width="800" height="450" loading="lazy" decoding="async" />
         <div class="pcard-body">
           <h3>{OFFERS.practitioner.name}</h3>
           <p>Apply biomimicry to a real challenge from your work, with mentors.
@@ -33,7 +34,7 @@ const deadlines = steps(OFFERS.educator.deadlines);
         </div>
       </article>
       <article class="pcard c3">
-        <img src="/images/programmes/programme-educator.jpg" alt="A pink lotus flower rising above its leaves" width="800" height="500" loading="lazy" decoding="async" />
+        <img src="/images/programmes/programme-educator.jpg" alt="Biomimicry Educator Programme: a blue butterfly in flight. 20 hours per month, 6 months part-time, project based." width="800" height="450" loading="lazy" decoding="async" />
         <div class="pcard-body">
           <h3>{OFFERS.educator.name}</h3>
           <p>Teach biomimicry with confidence and bring it into your classroom or organisation.
@@ -58,11 +59,11 @@ const deadlines = steps(OFFERS.educator.deadlines);
   .pcard.c1 { --accent: var(--lb-amber); }
   .pcard.c2 { --accent: var(--lb-coral); }
   .pcard.c3 { --accent: var(--lb-aqua); }
-  .pcard img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; background: var(--surface); }
+  .pcard img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--surface); }
   .pcard-body { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
   .pcard h3 { font-size: 20px; color: var(--lb-deep); }
   .pcard p { font-size: 15px; line-height: 1.6; color: rgba(35,31,32,0.78); flex: 1; }
   .pcard-btn { align-self: flex-start; margin-top: 6px; border: 1.5px solid var(--lb-deep); color: var(--lb-deep); border-radius: 999px; padding: 9px 18px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background .2s, color .2s; }
   .pcard-btn:hover { background: var(--lb-deep); color: #fff; }
-  @media (max-width: 900px) { .pband-grid { grid-template-columns: 1fr; max-width: 560px; } .pband { padding: 56px 0 64px; } .pcard img { aspect-ratio: 16 / 9; } }
+  @media (max-width: 900px) { .pband-grid { grid-template-columns: 1fr; max-width: 560px; } .pband { padding: 56px 0 64px; } }
 </style>
